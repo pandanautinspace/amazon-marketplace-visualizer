@@ -10,9 +10,6 @@
     "default_popup": "popup.html",
     "default_icon": "icon-34.png"
   },
-  "permissions": [
-    "storage"
-  ],
   "icons": {
     "128": "icon-128.png"
   },
@@ -23,7 +20,7 @@
       ],
       "js": [
         "contentScript.bundle.js",
-        "node_modules_pixi_js_lib_environment-broswer_broswerAll_mjs.bundle.js"
+        "node_modules_pixi_js_lib_environment-browser_browserAll_mjs.bundle.js"
       ],
       "css": [
         "content.styles.css"
@@ -39,5 +36,8 @@
       ],
       "matches": []
     }
+  ],
+  "permissions": [
+    "storage"
   ]
 }
