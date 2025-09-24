@@ -1,14 +1,16 @@
 import React from 'react';
-import { isProductPage, getBreadcrumbs, queryParams, pathParts, navTitle, getPageType, getBreadcrumbsStorefront } from '../../modules/breadcrumbs';
+import { isProductPage, getBreadcrumbs, queryParams, pathParts, navTitle, getPageType, getBreadcrumbsStorefront, getDepartmentInfo, getMarketplaceLocationData } from '../../modules/breadcrumbs';
 
 const Inject = () => {
     const productPage = isProductPage(window);
     const breadcrumbs = getBreadcrumbs(document);
     const storefrontBreadcrumbs = getBreadcrumbsStorefront(document);
+    const departmentInfo = getDepartmentInfo(document);
     const params = queryParams(window);
     const path = pathParts(window);
     const title = navTitle(document);
     const pageType = getPageType(window);
+    const mkt = getMarketplaceLocationData(document, window);
 
     return (
         <div style={{ padding: '10px', fontFamily: 'Arial, sans-serif', position: 'fixed', top: '10px', right: '10px', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10000, maxWidth: '300px', maxHeight: '500px', overflow: 'auto' }}>
@@ -40,6 +42,20 @@ const Inject = () => {
                     </ul>
                 </div>
             )}
+            {departmentInfo.length > 0 && (
+                <div>
+                    <h3>Department Info:</h3>
+                    <ul>
+                        {departmentInfo.map((dept, index) => (
+                            <li key={index}>
+                                {dept.link ? (
+                                    <a href={dept.link} target="_blank" rel="noopener noreferrer">{dept.text}</a>
+                                ) : (dept.text)}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
             <h3>Query Parameters:</h3>
             <ul>
                 {Object.entries(params).map(([key, value]) => (
@@ -54,6 +70,8 @@ const Inject = () => {
             </ul>
             <h3>Navigation Title:</h3>
             <p>{title}</p>
+            <h3>Marketplace Location Data:</h3>
+            <p>{JSON.stringify(mkt)}</p>
         </div>
     );
 };
