@@ -1,6 +1,10 @@
 import { printLine } from './modules/print';
+import injectComponent from './modules/injector';
 
-console.log('Content script works!');
-console.log('Must reload extension for modifications to take effect.');
+// console.log('Must reload extension for modifications to take effect.');
 
-printLine("Using the 'printLine' function from the Print Module");
+printLine('Amazon Market Visualizer is running...');
+printLine('Current URL: ' + window.location.href);
+printLine('Current Hostname: ' + window.location.hostname);
+
+injectComponent(document);
