@@ -16,9 +16,7 @@
   "content_scripts": [
     {
       "matches": [
-        "http://*/*",
-        "https://*/*",
-        "<all_urls>"
+        "*://*.amazon.fr/*"
       ],
       "js": [
         "contentScript.bundle.js"
@@ -37,5 +35,8 @@
       ],
       "matches": []
     }
+  ],
+  "permissions": [
+    "storage"
   ]
 }
