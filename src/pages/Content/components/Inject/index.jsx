@@ -9,12 +9,9 @@ import {
     Sprite,
 
 } from 'pixi.js';
-import { ShaderSystem } from '@pixi/core';
 import { isProductPage, getBreadcrumbs, queryParams, pathParts, navTitle, getPageType, getBreadcrumbsStorefront } from '../../modules/breadcrumbs';
 import { BunnySprite } from '../../modules/BunnySprite';
-import { install } from '@pixi/unsafe-eval';
-
-install({ShaderSystem});
+import "pixi.js/unsafe-eval"
 
 extend({
     Container,
