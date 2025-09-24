@@ -5,23 +5,23 @@ import './Popup.css';
 
 const Popup = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/pages/Popup/Popup.jsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React!
-        </a>
-      </header>
-    </div>
+    <body>
+      <div className='Main-Container'>
+        <div className="Button-Container">
+          <button>View</button>
+          <button>Chat</button>
+        </div>
+        <div>
+          <div className="Interactive-Interface"></div>
+        </div>
+      </div>
+    </body>
   );
 };
-
+{/* </div>
+    <div className="App">
+      <header className="App-header">
+        
+      </header>
+    </div> */}
 export default Popup;
