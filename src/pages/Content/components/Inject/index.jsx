@@ -1,5 +1,27 @@
 import React from 'react';
+import {
+    Application,
+    extend,
+} from '@pixi/react';
+import {
+    Container,
+    Graphics,
+    Sprite,
+
+} from 'pixi.js';
+import { ShaderSystem } from '@pixi/core';
 import { isProductPage, getBreadcrumbs, queryParams, pathParts, navTitle, getPageType, getBreadcrumbsStorefront } from '../../modules/breadcrumbs';
+import { BunnySprite } from '../../modules/BunnySprite';
+import { install } from '@pixi/unsafe-eval';
+
+install({ShaderSystem});
+
+extend({
+    Container,
+    Graphics,
+    Sprite,
+});
+
 
 const Inject = () => {
     const productPage = isProductPage(window);
@@ -10,9 +32,15 @@ const Inject = () => {
     const title = navTitle(document);
     const pageType = getPageType(window);
 
+
     return (
         <div style={{ padding: '10px', fontFamily: 'Arial, sans-serif', position: 'fixed', top: '10px', right: '10px', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10000, maxWidth: '300px', maxHeight: '500px', overflow: 'auto' }}>
             <h2>Injected Component</h2>
+            <div style={{ width: '200px', height: '200px', margin: '10px 0' }}>
+                <Application width={200} height={200}>
+                        <BunnySprite  />
+                </Application>
+            </div>
             <p><strong>Page Type:</strong> {pageType}</p>
             {productPage ? (
                 <div>

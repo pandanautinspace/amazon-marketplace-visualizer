@@ -13,8 +13,11 @@
     "prettier": "prettier --write '**/*.{js,jsx,ts,tsx,json,css,scss,md}'"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@pixi/react": "^8.0.0-beta.25",
+    "pixi.js": "^8.13.2",
+    "@pixi/unsafe-eval": "^7.4.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
