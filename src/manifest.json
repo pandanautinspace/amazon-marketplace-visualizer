@@ -19,7 +19,8 @@
         "*://*.amazon.fr/*"
       ],
       "js": [
-        "contentScript.bundle.js"
+        "contentScript.bundle.js",
+        "node_modules_pixi_js_lib_environment-browser_browserAll_mjs.bundle.js"
       ],
       "css": [
         "content.styles.css"

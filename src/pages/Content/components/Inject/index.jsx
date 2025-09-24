@@ -1,4 +1,6 @@
 import React from 'react';
+import 'pixi.js/unsafe-eval';
+import { Application } from '@pixi/react';
 import { isProductPage, getBreadcrumbs, queryParams, pathParts, navTitle, getPageType, getBreadcrumbsStorefront, getDepartmentInfo, getMarketplaceLocationData } from '../../modules/breadcrumbs';
 
 const Inject = () => {
@@ -14,7 +16,8 @@ const Inject = () => {
 
     return (
         <div style={{ padding: '10px', fontFamily: 'Arial, sans-serif', position: 'fixed', top: '10px', right: '10px', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10000, maxWidth: '300px', maxHeight: '500px', overflow: 'auto' }}>
-            <h2>Injected Component</h2>
+            <Application autoStart sharedTicker />
+            {/* <h2>Injected Component</h2>
             <p><strong>Page Type:</strong> {pageType}</p>
             {productPage ? (
                 <div>
@@ -71,7 +74,7 @@ const Inject = () => {
             <h3>Navigation Title:</h3>
             <p>{title}</p>
             <h3>Marketplace Location Data:</h3>
-            <p>{JSON.stringify(mkt)}</p>
+            <p>{JSON.stringify(mkt)}</p> */}
         </div>
     );
 };
