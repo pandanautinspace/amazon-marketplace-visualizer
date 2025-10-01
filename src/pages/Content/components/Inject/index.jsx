@@ -82,7 +82,7 @@ const Inject = () => {
             <Application autoStart sharedTicker width={300} height={500}>
 
                 {Object.entries(remoteUsersData).map(([userID, data], index) => (
-                    <BunnySprite key={userID} x={50 + (index % 5) * 50} y={50 + Math.floor(index / 5) * 50} hoverText={JSON.stringify(data.location, null, 2)} />
+                    <BunnySprite key={userID} x={50 + (index % 5) * 50} y={50 + Math.floor(index / 5) * 50} hoverText={data.location} />
                 ))}
             </Application>
             <h3>Amazon Market Visualizer</h3>
