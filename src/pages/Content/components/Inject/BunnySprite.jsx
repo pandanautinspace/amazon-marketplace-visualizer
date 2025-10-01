@@ -18,6 +18,33 @@ export function BunnySprite({ x, y, hoverText, userID }) {
     const [isHovered, setIsHover] = useState(false)
     const [isActive, setIsActive] = useState(false)
 
+    const clickCallBack = useCallback(() => {
+        switch (hoverText.pageType) {
+            case "browse":
+                window.location = `https://www.amazon.fr//gp/browse.html?${hoverText.navData.node}`;
+                break;
+            case "product":
+                window.location = `https://www.amazon.fr/dp/${hoverText.navData.productId}`;
+                break;
+            case "storefront":
+                const storePath = hoverText.navData.storeNavPath;
+                if (storePath.length == 3) {
+                    window.location = `https://www.amazon.fr/${storePath[0]}/${storePath[1]}/${storePath[2]}`;
+                } else if (storePath.length == 4) {
+                    window.location = `https://www.amazon.fr/${storePath[0]}/${storePath[1]}/${storePath[2]}/${storePath[3]}`;
+                }
+                break;
+            case "search":
+                window.location = `https://www.amazon.fr/s?k=${hoverText.navData.k}&i=${hoverText.navData.i}`;
+                break;
+            case "other":
+                console.log("other");
+                break;
+            default:
+                console.log("Fail");
+        }
+    }, [hoverText]);
+
     useEffect(() => {
         console.log("Bunny sprite hovered state:", isHovered);
     }, [isHovered]);
@@ -26,7 +53,7 @@ export function BunnySprite({ x, y, hoverText, userID }) {
 
     useEffect(() => {
         if (texture === Texture.EMPTY) {
-            const imageURL = `https://api.dicebear.com/9.x/adventurer/png?seed=${userID}`;
+            const imageURL = `https://api.dicebear.com/9.x/adventurer/png?seed=${userID}&size=64`;
             Assets
                 .load({
                     src: imageURL,
@@ -46,15 +73,13 @@ export function BunnySprite({ x, y, hoverText, userID }) {
                 ref={spriteRef}
                 anchor={0.5}
                 eventMode={'static'}
-                onClick={(event) => setIsActive(!isActive)}
+                onClick={clickCallBack}
                 onPointerOver={(event) => setIsHover(true)}
                 onPointerOut={(event) => setIsHover(false)}
                 scale={isActive ? 1 : 1.5}
                 texture={texture}
                 x={x}
                 y={y}
-                width={64}
-                height={64}
             />
             {isHovered && hoverText && (
                 <pixiContainer

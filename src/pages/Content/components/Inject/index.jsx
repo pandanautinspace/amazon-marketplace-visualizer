@@ -88,7 +88,7 @@ const VisualizerContainer = () => {
     const tickCallback = useCallback(
         () => {
             const now = Date.now();
-            if (now - lastUpdateRef.current < 15000) return; // throttle to 15s
+            if (now - lastUpdateRef.current < 60000) return; // throttle to 60s
             lastUpdateRef.current = now;
 
             if (!userID) return;
