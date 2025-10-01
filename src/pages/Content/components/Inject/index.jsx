@@ -17,6 +17,7 @@ import {
 } from 'pixi.js';
 
 import { BunnySprite } from './BunnySprite';
+import { Rectangle } from './ProductCategories';
 import { getMarketplaceLocationData } from '../../modules/breadcrumbs';
 
 
@@ -105,7 +106,7 @@ const VisualizerContainer = () => {
     );
 
     useTick(tickCallback);
-
+        
     return (
         <pixiContainer>
             {/* Other users in a grid */}
@@ -131,6 +132,7 @@ const VisualizerContainer = () => {
                     userID={userID}
                 />
             )}
+            <Rectangle x={50} y={50} width={50} height={50} color={0xeeeeee} productCat={'Phones'} />
         </pixiContainer>
     );
 };
@@ -153,6 +155,7 @@ const Inject = () => {
         <div style={{ padding: '10px', fontFamily: 'Arial, sans-serif', position: 'fixed', top: '10px', right: '10px', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10000, maxWidth: '300px', maxHeight: '500px', overflow: 'auto' }}>
             <Application autoStart sharedTicker width={300} height={500}>
                 <VisualizerContainer />
+
             </Application>
             <h3>Amazon Market Visualizer</h3>
             <strong>Your Marketplace Location Data:</strong>
