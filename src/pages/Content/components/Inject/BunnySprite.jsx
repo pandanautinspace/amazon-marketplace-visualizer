@@ -26,7 +26,7 @@ export function BunnySprite({ x, y, hoverText, userID }) {
 
     useEffect(() => {
         if (texture === Texture.EMPTY) {
-            const imageURL = `https://api.dicebear.com/9.x/adventurer/png?seed=${userID}`;
+            const imageURL = `https://api.dicebear.com/9.x/adventurer/png?seed=${userID}&size=64`;
             Assets
                 .load({
                     src: imageURL,
@@ -53,8 +53,6 @@ export function BunnySprite({ x, y, hoverText, userID }) {
                 texture={texture}
                 x={x}
                 y={y}
-                width={64}
-                height={64}
             />
             {isHovered && hoverText && (
                 <pixiContainer
