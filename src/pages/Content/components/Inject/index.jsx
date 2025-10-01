@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, doc, setDoc, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 import 'pixi.js/unsafe-eval';
 import {
     Application,
     extend,
+    useTick
 } from '@pixi/react';
 import {
     Container,
@@ -41,6 +42,99 @@ initializeApp(firebaseConfig);
 const db = getFirestore();
 console.log('Firestore initialized:', db);
 
+const VisualizerContainer = () => {
+    const mkt = getMarketplaceLocationData(document, window);
+
+    const [remoteUsersData, setRemoteUsersData] = React.useState({});
+    const [userID, setUserID] = React.useState(null);
+    const lastUpdateRef = React.useRef(0);
+
+    useEffect(() => {
+        console.log('Remote Users Data updated:', remoteUsersData);
+    }, [remoteUsersData]);
+
+    // Load our userID once
+    useEffect(() => {
+        chrome.storage.local.get("userID").then((result) => {
+            if (result.userID) {
+                setUserID(result.userID);
+            }
+        });
+    }, []);
+
+    // Subscribe to all remote users in real-time
+    useEffect(() => {
+        const usersCollection = collection(db, "users");
+
+        const unsubscribe = onSnapshot(
+            usersCollection,
+            (snapshot) => {
+                const usersData = {};
+                snapshot.forEach((docSnap) => {
+                    usersData[docSnap.id] = docSnap.data();
+                });
+                setRemoteUsersData(usersData);
+            },
+            (error) => {
+                console.error("Error listening to users collection:", error);
+            }
+        );
+
+        return () => unsubscribe();
+    }, []);
+
+    // Update *our own* location every 15s
+    const tickCallback = useCallback(
+        () => {
+            const now = Date.now();
+            if (now - lastUpdateRef.current < 15000) return; // throttle to 15s
+            lastUpdateRef.current = now;
+
+            if (!userID) return;
+
+            const userRef = doc(db, "users", userID);
+            setDoc(userRef, { location: mkt }, { merge: true })
+                .then(() => {
+                    console.log("Location updated for:", userID);
+                })
+                .catch((error) => {
+                    console.error("Error writing document: ", error);
+                });
+        },
+        [mkt, userID]
+    );
+
+    useTick(tickCallback);
+
+    return (
+        <pixiContainer>
+            {/* Other users in a grid */}
+            {Object.entries(remoteUsersData)
+                .filter(([id]) => id !== userID) // exclude self
+                .map(([id, data], index) => (
+                    <BunnySprite
+                        key={id}
+                        x={50 + (index % 5) * 50}
+                        y={50 + Math.floor(index / 5) * 50}
+                        hoverText={data.location}
+                        userID={id}
+                    />
+                ))}
+
+            {/* Our own bunny fixed in the center */}
+            {userID && remoteUsersData[userID] && (
+                <BunnySprite
+                    key="self"
+                    x={300 / 2}
+                    y={500 / 2}
+                    hoverText={remoteUsersData[userID].location}
+                    userID={userID}
+                />
+            )}
+        </pixiContainer>
+    );
+};
+
 
 
 const Inject = () => {
@@ -48,29 +142,7 @@ const Inject = () => {
 
     const [remoteUsersData, setRemoteUsersData] = React.useState({});
     useEffect(() => {
-        console.log('Marketplace Location Data:', mkt);
-        chrome.storage.local.get("userID").then((result) => {
-            console.log('User ID from storage:', result.userID);
-            console.log('Complete Data:', { userID: result.userID, location: mkt });
-            const userRef = doc(db, "users", result.userID);
-            setDoc(userRef, { location: mkt }, { merge: false }).then(() => {
-                console.log('Data successfully written to Firestore!');
-            }).catch((error) => {
-                console.error('Error writing document: ', error);
-            });
-        });
 
-        const usersCollection = collection(db, "users");
-        getDocs(usersCollection).then((querySnapshot) => {
-            const usersData = {};
-            querySnapshot.forEach((doc) => {
-                usersData[doc.id] = doc.data();
-            });
-            console.log('Remote Users Data:', usersData);
-            setRemoteUsersData(usersData);
-        }).catch((error) => {
-            console.error('Error getting documents: ', error);
-        });
     }, []);
 
     useEffect(() => {
@@ -80,10 +152,7 @@ const Inject = () => {
     return (
         <div style={{ padding: '10px', fontFamily: 'Arial, sans-serif', position: 'fixed', top: '10px', right: '10px', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10000, maxWidth: '300px', maxHeight: '500px', overflow: 'auto' }}>
             <Application autoStart sharedTicker width={300} height={500}>
-
-                {Object.entries(remoteUsersData).map(([userID, data], index) => (
-                    <BunnySprite key={userID} x={50 + (index % 5) * 50} y={50 + Math.floor(index / 5) * 50} hoverText={JSON.stringify(data.location, null, 2)} />
-                ))}
+                <VisualizerContainer />
             </Application>
             <h3>Amazon Market Visualizer</h3>
             <strong>Your Marketplace Location Data:</strong>
