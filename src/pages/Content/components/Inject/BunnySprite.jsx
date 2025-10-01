@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { useTick } from '@pixi/react';
 
-export function BunnySprite({ x, y, hoverText }) {
+export function BunnySprite({ x, y, hoverText, userID }) {
     // The Pixi.js `Sprite`
     const spriteRef = useRef(null)
 
@@ -50,16 +50,22 @@ export function BunnySprite({ x, y, hoverText }) {
     }, [isHovered]);
 
     // Preload the sprite if it hasn't been loaded yet
+
     useEffect(() => {
         if (texture === Texture.EMPTY) {
+            const imageURL = `https://api.dicebear.com/9.x/adventurer/png?seed=${userID}&size=64`;
             Assets
-                .load('https://pixijs.com/assets/bunny.png')
+                .load({
+                    src: imageURL,
+                    parser: 'loadTextures',
+                    name: `user-avatar-${userID}`
+                })
                 .then((result) => {
                     setTexture(result)
-                    console.log('Bunny texture loaded');
+                    console.log('User texture loaded');
                 });
         }
-    }, [texture]);
+    }, [texture, userID]);
 
     return (
         <>
@@ -73,7 +79,8 @@ export function BunnySprite({ x, y, hoverText }) {
                 scale={isActive ? 1 : 1.5}
                 texture={texture}
                 x={x}
-                y={y} />
+                y={y}
+            />
             {isHovered && hoverText && (
                 <pixiContainer
                 >
