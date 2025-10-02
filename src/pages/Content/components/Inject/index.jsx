@@ -102,9 +102,22 @@ const VisualizerContainer = () => {
                 });
         },
         [mkt, userID]
-    );
+    ); //Stop using tick callback for now
 
-    useTick(tickCallback);
+    useEffect(() => {
+        if (!userID) return;
+
+        const userRef = doc(db, "users", userID);
+        setDoc(userRef, { location: mkt }, { merge: false })
+            .then(() => {
+                console.log("Location updated for:", userID);
+            })
+            .catch((error) => {
+                console.error("Error writing document: ", error);
+            });
+    }, [mkt, userID]);
+
+    // useTick(tickCallback);
 
     return (
         <pixiContainer>
@@ -150,10 +163,37 @@ const Inject = () => {
     }, [remoteUsersData]);
 
     return (
-        <div style={{ padding: '10px', fontFamily: 'Arial, sans-serif', position: 'fixed', top: '10px', right: '10px', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10000, maxWidth: '300px', maxHeight: '500px', overflow: 'auto' }}>
-            <Application autoStart sharedTicker width={300} height={500}>
-                <VisualizerContainer />
-            </Application>
+        <div style={{
+            padding: '10px',
+            fontFamily: 'Arial, sans-serif',
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            backgroundColor: 'white',
+            border: '1px solid #ccc',
+            borderRadius: '5px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            zIndex: 10000,
+            maxWidth: '300px',
+            maxHeight: '500px',
+            overflow: 'auto'
+        }}>
+            <div style={{
+                background: 'radial-gradient(circle at center, #f8f8f8 0%, #eaeaea 100%)',
+                backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.08) 2px, transparent 30%), radial-gradient(circle, rgba(0,0,0,0.08) 2px, transparent 30%)',
+                backgroundSize: '24px 14px',
+                backgroundPosition: '0 0, 12px 7px'
+            }}>
+                <Application autoStart sharedTicker width={300} height={500} backgroundAlpha={0} style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%'
+                }}>
+                    <VisualizerContainer />
+                </Application>
+            </div>
             <h3>Amazon Market Visualizer</h3>
             <strong>Your Marketplace Location Data:</strong>
             <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '12px' }}>

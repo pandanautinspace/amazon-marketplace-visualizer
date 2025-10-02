@@ -21,7 +21,7 @@ export function BunnySprite({ x, y, hoverText, userID }) {
     const clickCallBack = useCallback(() => {
         switch (hoverText.pageType) {
             case "browse":
-                window.location = `https://www.amazon.fr//gp/browse.html?${hoverText.navData.node}`;
+                window.location = `https://www.amazon.fr/b?node=${hoverText.navData.node}`;
                 break;
             case "product":
                 window.location = `https://www.amazon.fr/dp/${hoverText.navData.productId}`;
@@ -48,6 +48,14 @@ export function BunnySprite({ x, y, hoverText, userID }) {
     useEffect(() => {
         console.log("Bunny sprite hovered state:", isHovered);
     }, [isHovered]);
+
+    const tickerCallback = useCallback((ticker) => {
+        if (spriteRef.current) {
+            spriteRef.current.rotation = Math.sin(ticker.lastTime / 200) * 0.1;
+        }
+    }, []);
+
+    useTick(tickerCallback);
 
     // Preload the sprite if it hasn't been loaded yet
 
