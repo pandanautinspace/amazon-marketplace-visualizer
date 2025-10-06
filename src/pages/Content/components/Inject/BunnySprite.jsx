@@ -8,17 +8,37 @@ import {
     useRef,
     useState,
 } from 'react';
-import { useTick } from '@pixi/react';
+import { useApplication, useTick } from '@pixi/react';
 
 export function BunnySprite({ x, y, hoverText, userID }) {
     // The Pixi.js `Sprite`
     const spriteRef = useRef(null)
+    const app = useApplication().app;
 
     const [texture, setTexture] = useState(Texture.EMPTY)
     const [isHovered, setIsHover] = useState(false)
     const [isActive, setIsActive] = useState(false)
+    const [storedUserID, setStoredUserID] = useState(null);
+
+    // Load our userID once
+    useEffect(() => {
+        chrome.storage.local.get("userID").then((result) => {
+            if (result.userID) {
+                setStoredUserID(result.userID);
+            }
+        });
+    }, []);
+
+    useEffect(() => {
+        if (userID === storedUserID) {
+            setIsActive(true);
+        } else {
+            setIsActive(false);
+        }
+    }, [userID, storedUserID]);
 
     const clickCallBack = useCallback(() => {
+        console.log("Bunny clicked:", hoverText);
         switch (hoverText.pageType) {
             case "browse":
                 window.location = `https://www.amazon.fr/b?node=${hoverText.navData.node}`;
@@ -44,10 +64,6 @@ export function BunnySprite({ x, y, hoverText, userID }) {
                 console.log("Fail");
         }
     }, [hoverText]);
-
-    useEffect(() => {
-        console.log("Bunny sprite hovered state:", isHovered);
-    }, [isHovered]);
 
     const tickerCallback = useCallback((ticker) => {
         if (spriteRef.current) {
@@ -75,17 +91,70 @@ export function BunnySprite({ x, y, hoverText, userID }) {
         }
     }, [texture, userID]);
 
+    useEffect(() => {
+        const cb = () => {
+            console.log("moving...");
+        }
+        if (app.stage) {
+            app.stage.on('pointermove', cb);
+            console.log("Stage events bound");
+        }
+        return () => {
+            if (app.stage) {
+                app.stage.off('pointermove', cb);
+            }
+        };
+    }, [app]);
+
+    const onDragStart = useCallback((event) => {
+        event.currentTarget.alpha = 0.5;
+        event.currentTarget.cursor = 'grabbing';
+        event.currentTarget.dragging = true;
+        event.currentTarget.data = event.data;
+        console.log("Drag start");
+        console.log(app.stage);
+        if (app.stage) {
+            app.stage.on('pointermove', onDragMove);
+            app.stage.on('pointerupoutside', onDragEnd);
+            app.stage.on('pointerup', onDragEnd);
+            console.log(onDragEnd);
+            console.log(onDragMove);
+            console.log("Stage events bound");
+        }
+    }, [app, spriteRef]);
+    const onDragEnd = useCallback((event) => {
+        spriteRef.current.alpha = 1;
+        spriteRef.current.cursor = 'grab';
+        spriteRef.current.dragging = false;
+        spriteRef.current.data = null;
+        if (app.stage) {
+            app.stage.off('pointermove', onDragMove);
+            app.stage.off('pointerupoutside', onDragEnd);
+            app.stage.off('pointerup', onDragEnd);
+        }
+    }, [app, spriteRef]);
+    const onDragMove = useCallback((event) => {
+        console.log("Drag move");
+        if (spriteRef.current.dragging) {
+            const newPosition = spriteRef.current.data.getLocalPosition(spriteRef.current.parent);
+            spriteRef.current.x = newPosition.x;
+            spriteRef.current.y = newPosition.y;
+        }
+    }, [app, spriteRef]);
+
     return (
         <>
             <pixiSprite
                 ref={spriteRef}
                 anchor={0.5}
                 eventMode={'static'}
-                onClick={clickCallBack}
+                onClick={!isActive ? clickCallBack : undefined}
+                onPointerDown={isActive ? onDragStart : undefined}
                 onPointerOver={(event) => setIsHover(true)}
                 onPointerOut={(event) => setIsHover(false)}
                 scale={isActive ? 1 : 1.5}
                 texture={texture}
+                cursor={isActive ? 'grab' : 'pointer'}
                 x={x}
                 y={y}
             />
@@ -98,9 +167,8 @@ export function BunnySprite({ x, y, hoverText, userID }) {
                         y={y - 30}
                         style={{
                             fontSize: 12,
-                            fill: '#ffffff',
-                            stroke: '#000000',
-                            strokeThickness: 4,
+                            fill: '#000000',
+                            stroke: { color: '#ffffff', thickness: 3 }
                         }} />
                 </pixiContainer>
             )}

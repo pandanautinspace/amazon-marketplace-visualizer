@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, doc, setDoc, onSnapshot } from 'firebase/firestore';
@@ -42,12 +42,13 @@ initializeApp(firebaseConfig);
 const db = getFirestore();
 console.log('Firestore initialized:', db);
 
-const VisualizerContainer = () => {
+const VisualizerContainer = ({ containerRef }) => {
     const mkt = getMarketplaceLocationData(document, window);
 
     const [remoteUsersData, setRemoteUsersData] = React.useState({});
-    const [userID, setUserID] = React.useState(null);
-    const lastUpdateRef = React.useRef(0);
+    const [userID, setUserID] = useState(null);
+    const [size, setSize] = useState({ width: 0, height: 0 });
+    const lastUpdateRef = useRef(0);
 
     useEffect(() => {
         console.log('Remote Users Data updated:', remoteUsersData);
@@ -61,6 +62,26 @@ const VisualizerContainer = () => {
             }
         });
     }, []);
+
+    useEffect(() => {
+        if (containerRef.current) {
+            const element = containerRef.current;
+            const handleResize = () => {
+                setSize({
+                    width: element.clientWidth,
+                    height: element.clientHeight
+                });
+            };
+
+            handleResize(); // Call it initially
+            const resizeObserver = new ResizeObserver(handleResize);
+            resizeObserver.observe(element);
+
+            return () => {
+                resizeObserver.disconnect();
+            };
+        }
+    }, [containerRef]);
 
     // Subscribe to all remote users in real-time
     useEffect(() => {
@@ -138,8 +159,8 @@ const VisualizerContainer = () => {
             {userID && remoteUsersData[userID] && (
                 <BunnySprite
                     key="self"
-                    x={300 / 2}
-                    y={500 / 2}
+                    x={size.width / 2}
+                    y={size.height / 2}
                     hoverText={remoteUsersData[userID].location}
                     userID={userID}
                 />
@@ -152,8 +173,38 @@ const VisualizerContainer = () => {
 
 const Inject = () => {
     const mkt = getMarketplaceLocationData(document, window);
+    const divRef = useRef(null);
+    const containerRef = useRef(null);
+    const appRef = useRef(null);
+    const [size, setSize] = useState({ width: 300, height: 300 });
 
-    const [remoteUsersData, setRemoteUsersData] = React.useState({});
+    const startResizing = (e) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startWidth = containerRef.current.offsetWidth;
+        const startHeight = containerRef.current.offsetHeight;
+
+        const doDrag = (e) => {
+            const newWidth = startWidth - (e.clientX - startX);
+            const newHeight = startHeight + (e.clientY - startY);
+            setSize({
+                width: Math.max(100, newWidth),  // min width
+                height: Math.max(100, newHeight),
+            });
+            appRef.current.getApplication().queueResize();
+        };
+
+        const stopDrag = () => {
+            window.removeEventListener("mousemove", doDrag);
+            window.removeEventListener("mouseup", stopDrag);
+        };
+
+        window.addEventListener("mousemove", doDrag);
+        window.addEventListener("mouseup", stopDrag);
+    };
+
+    const [remoteUsersData, setRemoteUsersData] = useState({});
     useEffect(() => {
 
     }, []);
@@ -169,44 +220,46 @@ const Inject = () => {
             position: 'fixed',
             top: '10px',
             right: '10px',
+            overflow: 'hidden',
             backgroundColor: 'white',
             border: '1px solid #ccc',
             borderRadius: '5px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
             zIndex: 10000,
-            maxWidth: '300px',
-            maxHeight: '500px',
-            overflow: 'auto'
-        }}>
+            width: size.width + 'px',
+            height: size.height + 'px',
+        }}
+            ref={containerRef}
+        >
             <div style={{
                 background: 'radial-gradient(circle at center, #f8f8f8 0%, #eaeaea 100%)',
                 backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.08) 2px, transparent 30%), radial-gradient(circle, rgba(0,0,0,0.08) 2px, transparent 30%)',
                 backgroundSize: '24px 14px',
-                backgroundPosition: '0 0, 12px 7px'
-            }}>
-                <Application autoStart sharedTicker width={300} height={500} backgroundAlpha={0} style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%'
-                }}>
-                    <VisualizerContainer />
+                backgroundPosition: '0 0, 12px 7px',
+                width: '100%',
+                height: '100%',
+                borderRadius: '5px',
+                boxSizing: 'border-box',
+            }}
+                ref={divRef}
+            >
+                <Application autoStart sharedTicker backgroundAlpha={0} resizeTo={divRef} ref={appRef}>
+                    <VisualizerContainer containerRef={divRef} />
                 </Application>
             </div>
-            <h3>Amazon Market Visualizer</h3>
-            <strong>Your Marketplace Location Data:</strong>
-            <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '12px' }}>
-                {JSON.stringify(mkt, null, 2)}
-            </pre>
-            <strong>Remote Users Data:</strong>
-            {remoteUsersData ? Object.entries(remoteUsersData).map(([userID, data]) => (
-                <div key={userID} style={{ marginBottom: '10px' }}>
-                    <em>User ID:</em> {userID}
-                    <br />
-                    <em>Location:</em> {JSON.stringify(data.location, null, 2)}
-                </div>
-            )) : <p>No remote users data available.</p>}
+            <div
+                onMouseDown={startResizing}
+                style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    width: "16px",
+                    height: "16px",
+                    background: "#888",
+                    cursor: "nesw-resize",
+                    borderRadius: "4px",
+                }}
+            />
         </div>
     );
 };
