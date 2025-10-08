@@ -235,8 +235,8 @@ export const useResize = (
             const newHeight = startHeight + (e.clientY - startY);
 
             const updatedSize = {
-                width: Math.max(100, newWidth), // Minimum width of 100px
-                height: Math.max(100, newHeight), // Minimum height of 100px
+                width: Math.max(200, newWidth), // Minimum width of 100px
+                height: Math.max(200, newHeight), // Minimum height of 100px
             };
 
             setSize(updatedSize);
