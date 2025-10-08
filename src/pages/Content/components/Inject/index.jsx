@@ -62,21 +62,31 @@ const Inject = () => {
             ref={containerRef}
         >
             {/* PIXI.js Canvas Container */}
-            <div style={BACKGROUND_STYLES} ref={divRef}>
-                <Application
-                    autoStart
-                    sharedTicker
-                    backgroundAlpha={0}
-                    resizeTo={divRef}
-                    ref={appRef}
-                >
-                    <VisualizerContainer
-                        containerRef={divRef}
-                        remoteUsersData={remoteUsersData}
-                        userID={userID}
-                        size={containerSize}
-                    />
-                </Application>
+            <div class="h-1/2">
+                <div style={BACKGROUND_STYLES} ref={divRef}>
+                    <Application
+                        autoStart
+                        sharedTicker
+                        backgroundAlpha={0}
+                        resizeTo={divRef}
+                        ref={appRef}
+                    >
+                        <VisualizerContainer
+                            containerRef={divRef}
+                            remoteUsersData={remoteUsersData}
+                            userID={userID}
+                            size={containerSize}
+                        />
+                    </Application>
+                </div>
+            </div>
+
+            <div class="grid grid-flow-col grid-rows-3 p-2 gap-2">
+                <div class="row-span-3 bg-gray-200">
+                    CHAT
+                </div>
+                <button class="col-span-2 bg-orange-400 p-3 rounded font-bold text-white">Good Deal</button>
+                <button class="col-span-2 bg-orange-400 p-3 rounded font-bold text-white">Hello</button>
             </div>
 
             {/* Resize Handle */}
