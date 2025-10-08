@@ -1,6 +1,7 @@
 import {
     Assets,
     Texture,
+    Rectangle,
 } from 'pixi.js';
 import React, { useCallback } from 'react';
 import {
@@ -58,7 +59,7 @@ export function BunnySprite({ x, y, hoverText, userID }) {
                 window.location = `https://www.amazon.fr/s?k=${hoverText.navData.k}&i=${hoverText.navData.i}`;
                 break;
             case "other":
-                console.log("other");
+                window.location = `https://www.amazon.fr/`;
                 break;
             default:
                 console.log("Fail");
@@ -92,17 +93,14 @@ export function BunnySprite({ x, y, hoverText, userID }) {
     }, [texture, userID]);
 
     useEffect(() => {
-        const cb = () => {
-            console.log("moving...");
-        }
         if (app.stage) {
-            app.stage.on('pointermove', cb);
-            console.log("Stage events bound");
+            if (app.stage.eventMode != 'static') {
+                app.stage.eventMode = 'static';
+                app.stage.hitArea = app.screen;
+                console.log("Stage event mode set to static");
+            }
         }
         return () => {
-            if (app.stage) {
-                app.stage.off('pointermove', cb);
-            }
         };
     }, [app]);
 
@@ -152,13 +150,14 @@ export function BunnySprite({ x, y, hoverText, userID }) {
                 onPointerDown={isActive ? onDragStart : undefined}
                 onPointerOver={(event) => setIsHover(true)}
                 onPointerOut={(event) => setIsHover(false)}
-                scale={isActive ? 1 : 1.5}
+                scale={isActive ? 1.5 : 1}
                 texture={texture}
                 cursor={isActive ? 'grab' : 'pointer'}
                 x={x}
                 y={y}
+                zIndex={100}
             />
-            {isHovered && hoverText && (
+            {/* {isHovered && hoverText && (
                 <pixiContainer
                 >
                     <pixiText
@@ -171,7 +170,7 @@ export function BunnySprite({ x, y, hoverText, userID }) {
                             stroke: { color: '#ffffff', thickness: 3 }
                         }} />
                 </pixiContainer>
-            )}
+            )} */}
         </>
     );
 }

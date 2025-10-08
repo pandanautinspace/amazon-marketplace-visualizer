@@ -9,6 +9,9 @@ var { CleanWebpackPlugin } = require('clean-webpack-plugin');
 var ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 var ReactRefreshTypeScript = require('react-refresh-typescript');
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const ASSET_PATH = process.env.ASSET_PATH || '/';
 
 var alias = {};
@@ -64,6 +67,9 @@ var options = {
           },
           {
             loader: 'css-loader',
+          },
+          {
+            loader: 'postcss-loader',
           },
           {
             loader: 'sass-loader',
@@ -134,7 +140,16 @@ var options = {
     new CleanWebpackPlugin({ verbose: false }),
     new webpack.ProgressPlugin(),
     // expose and write the allowed env vars on the compiled bundle
-    new webpack.EnvironmentPlugin(['NODE_ENV']),
+    new webpack.EnvironmentPlugin([
+      'NODE_ENV',
+      'REACT_APP_FIREBASE_API_KEY',
+      'REACT_APP_FIREBASE_AUTH_DOMAIN',
+      'REACT_APP_FIREBASE_PROJECT_ID',
+      'REACT_APP_FIREBASE_STORAGE_BUCKET',
+      'REACT_APP_FIREBASE_MESSAGING_SENDER_ID',
+      'REACT_APP_FIREBASE_APP_ID',
+      'REACT_APP_FIREBASE_MEASUREMENT_ID'
+    ]),
     new CopyWebpackPlugin({
       patterns: [
         {
