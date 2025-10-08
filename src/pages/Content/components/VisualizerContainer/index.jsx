@@ -1,5 +1,5 @@
 import React from 'react';
-import { BunnySprite } from './BunnySprite';
+import { UserAvatar } from '../UserAvatar';
 import { Rectangle } from 'pixi.js';
 
 /**
@@ -22,7 +22,7 @@ export const VisualizerContainer = ({
         <pixiContainer eventMode='dynamic' hitArea={new Rectangle(0, 0, size.width, size.height)} zIndex={0}>
             {/* Render other users in a grid layout */}
             {otherUsers.map(([id, data], index) => (
-                <BunnySprite
+                <UserAvatar
                     key={id}
                     x={50 + (index % 5) * 50}
                     y={50 + Math.floor(index / 5) * 50}
@@ -33,7 +33,7 @@ export const VisualizerContainer = ({
 
             {/* Render current user's bunny in the center */}
             {currentUser && (
-                <BunnySprite
+                <UserAvatar
                     key="self"
                     x={size.width / 2}
                     y={size.height / 2}

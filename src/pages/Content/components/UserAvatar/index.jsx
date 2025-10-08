@@ -11,7 +11,7 @@ import {
 } from 'react';
 import { useApplication, useTick } from '@pixi/react';
 
-export function BunnySprite({ x, y, hoverText, userID }) {
+export function UserAvatar({ x, y, hoverText, userID }) {
     // The Pixi.js `Sprite`
     const spriteRef = useRef(null)
     const app = useApplication().app;
@@ -157,20 +157,6 @@ export function BunnySprite({ x, y, hoverText, userID }) {
                 y={y}
                 zIndex={100}
             />
-            {/* {isHovered && hoverText && (
-                <pixiContainer
-                >
-                    <pixiText
-                        text={JSON.stringify(hoverText, null, 2)}
-                        x={x}
-                        y={y - 30}
-                        style={{
-                            fontSize: 12,
-                            fill: '#000000',
-                            stroke: { color: '#ffffff', thickness: 3 }
-                        }} />
-                </pixiContainer>
-            )} */}
         </>
     );
 }

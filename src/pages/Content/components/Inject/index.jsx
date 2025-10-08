@@ -6,11 +6,10 @@ import { Application, extend } from '@pixi/react';
 import { Container, Graphics, Sprite, Text } from 'pixi.js';
 
 // Local components and hooks
-import './firebase'; // Initialize Firebase
-import { VisualizerContainer } from './VisualizerContainer';
+import '../../modules/firebase'; // Initialize Firebase
+import { VisualizerContainer } from '../VisualizerContainer';
 import { useUserID, useRemoteUsers, useLocationUpdater, useContainerSize } from './hooks';
-import { useResize } from './useResize';
-import { useMarketplaceLocation } from './useMarketplaceLocation';
+import { useResize, useMarketplaceLocation } from './hooks';
 import {
     CONTAINER_STYLES,
     BACKGROUND_STYLES,
