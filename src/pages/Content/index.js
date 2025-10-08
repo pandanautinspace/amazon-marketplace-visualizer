@@ -1,5 +1,6 @@
 import { printLine } from './modules/print';
 import injectComponent from './modules/injector';
+import '../../styles/tailwind.css';
 
 
 // console.log('Must reload extension for modifications to take effect.');
