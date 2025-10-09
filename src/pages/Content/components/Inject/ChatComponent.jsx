@@ -1,6 +1,6 @@
 // ChatComponent.jsx
 import React, { useState } from 'react';
-import { useMessages, useUserID } from './hooks'; // Adjust path as needed
+import { useMessages, useUserID } from './hooks';
 
 function ChatComponent() {
   const [newMessage, setNewMessage] = useState('');
@@ -13,88 +13,41 @@ function ChatComponent() {
     
     try {
       await sendMessage(userID, newMessage, 'text');
-      setNewMessage(''); // Clear input after sending
+      setNewMessage('');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
+  };
+  const handleSendDeal = async (e) => {
+    let newMess = "I found a DEAL!";
+    e.preventDefault();
+    try {
+      await sendMessage(userID, newMess, 'notif');
+      setNewMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
     }
   };
 
-  const chatStyles = {
-    chatContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      overflow: 'hidden',
-      backgroundColor: '#f5f5f5',
-      borderRadius: '4px',
-      boxShadow: 'inset 0 0 5px rgba(0,0,0,0.1)',
-    },
-    messagesList: {
-      flex: 1,
-      overflowY: 'auto',
-      padding: '8px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-    },
-    message: {
-      padding: '8px 12px',
-      borderRadius: '12px',
-      maxWidth: '80%',
-      wordBreak: 'break-word',
-    },
-    sent: {
-      alignSelf: 'flex-end',
-      backgroundColor: '#DCF8C6',
-    },
-    received: {
-      alignSelf: 'flex-start',
-      backgroundColor: '#FFFFFF',
-      borderColor: '#E2E2E2',
-    },
-    form: {
-      display: 'flex',
-      padding: '8px',
-      borderTop: '1px solid #ddd',
-    },
-    input: {
-      flex: 1,
-      padding: '8px',
-      borderRadius: '16px',
-      border: '1px solid #ddd',
-      outline: 'none',
-    },
-    button: {
-      marginLeft: '8px',
-      padding: '8px 12px',
-      border: 'none',
-      borderRadius: '16px',
-      backgroundColor: '#0B93F6',
-      color: 'white',
-      cursor: 'pointer',
-    },
-    loadingText: {
-      textAlign: 'center',
-      padding: '20px',
-    }
-  };
-
-  if (loading) return <div style={chatStyles.loadingText}>Loading messages...</div>;
-  if (error) return <div style={chatStyles.loadingText}>Error: {error.message}</div>;
+  if (loading) return <div className="text-center p-5">Loading messages...</div>;
+  if (error) return <div className="text-center p-5">Error: {error.message}</div>;
 
   return (
-    <div style={chatStyles.chatContainer}>
-      <div style={chatStyles.messagesList}>
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Messages container */}
+      <div className="flex-1 overflow-y-auto p-4">
         {messagesArray.map(message => (
           <div 
             key={message.id} 
-            style={{
-              ...chatStyles.message,
-              ...(message.userId === userID ? chatStyles.sent : chatStyles.received)
-            }}
+            className={`mb-2 p-2 rounded ${
+              message.userId === userID 
+                ? 'ml-auto bg-blue-100' 
+                : 'bg-white border'
+            }`}
+            style={{ maxWidth: '80%' }}
           >
             <div>{message.message}</div>
-            <div style={{ fontSize: '10px', marginTop: '4px', opacity: 0.7 }}>
+            <div className="text-xs text-gray-500">
               {message.timestamp 
                 ? new Date(message.timestamp.toDate()).toLocaleTimeString() 
                 : 'Sending...'}
@@ -103,16 +56,32 @@ function ChatComponent() {
         ))}
       </div>
 
-      <form onSubmit={handleSendMessage} style={chatStyles.form}>
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type a message..."
-          style={chatStyles.input}
-        />
-        <button type="submit" style={chatStyles.button}>Send</button>
-      </form>
+      {/* Input container */}
+      <div className="p-4 bg-white border-t">
+        <form onSubmit={handleSendMessage} className="mb-2">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 p-2 border rounded"
+            />
+            <button 
+              type="submit" 
+              className="px-4 bg-blue-500 text-white rounded"
+            >
+              Send
+            </button>
+          </div>
+        </form>
+        <button 
+          onClick={handleSendDeal}
+          className="w-full p-2 bg-green-500 text-white rounded"
+        >
+          I found a DEAL!
+        </button>
+      </div>
     </div>
   );
 }

@@ -43,7 +43,7 @@ const Inject = () => {
     const userID = useUserID();
     const remoteUsersData = useRemoteUsers();
     const containerSize = useContainerSize(divRef);
-    const { size, startResizing } = useResize(containerRef, appRef, DEFAULT_SIZE);
+    const { size, startResizing, setSize } = useResize(containerRef, appRef, DEFAULT_SIZE);
 
     // Button state
     const [showChat, setShowChat] = useState(false);
@@ -56,6 +56,29 @@ const Inject = () => {
         console.log('Remote Users Data updated:', remoteUsersData);
     }, [remoteUsersData]);
 
+
+    // Add a ref to track first render
+    const isFirstRender = useRef(true);
+
+    // Modified effect to skip first render
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+
+        if (showChat) {
+            setSize(prevSize => ({
+                width: prevSize.width + 300,
+                height: prevSize.height
+            }));
+        } else {
+            setSize(prevSize => ({
+                width: prevSize.width - 300,
+                height: prevSize.height
+            }));
+        }
+    }, [showChat, setSize]);
 
     // Chat toggle handler
     const handleChatToggle = () => {
@@ -89,10 +112,10 @@ const Inject = () => {
                         height: '100%',
                         borderLeft: '1px solid #ddd',
                         backgroundColor: '#ffffff'
-                    }}>
+                    }} >
                         <ChatComponent />
                     </div>
-                )}
+                ) }
             </div>
         );
     };
@@ -109,12 +132,12 @@ const Inject = () => {
         >
             <div style={{ 
                     display: 'flex', 
-                    justifyContent: 'space-between', 
+                    justifyContent: 'flex-end', 
                     padding: '5px',
                     backgroundColor: '#f0f0f0',
                     borderBottom: '1px solid #ddd'
                 }}>
-                    <button onClick={handleChatToggle}>
+                    <button onClick={handleChatToggle} >
                         {showChat ? 'Hide Chat' : 'Show Chat'}
                     </button>
             </div>

@@ -256,7 +256,7 @@ export const useResize = (
         window.addEventListener('mouseup', handleMouseUp);
     };
 
-    return { size, startResizing };
+    return { size, startResizing, setSize };
 };
 
 /**
