@@ -1,5 +1,5 @@
 // ChatComponent.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect} from 'react';
 import { useMessages, useUserID } from './hooks';
 
 function ChatComponent() {
@@ -7,6 +7,12 @@ function ChatComponent() {
   const userID = useUserID();
   const { messagesArray, loading, error, sendMessage } = useMessages();
 
+
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messagesArray]);
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !userID) return;
@@ -36,7 +42,7 @@ function ChatComponent() {
     <div className="h-full flex flex-col bg-gray-50">
       {/* Messages container */}
       <div className="flex-1 overflow-y-auto p-4">
-        {messagesArray.map(message => (
+        {[...messagesArray].reverse().map(message => (
           <div 
             key={message.id} 
             className={`mb-2 p-2 rounded ${

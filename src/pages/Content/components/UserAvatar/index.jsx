@@ -137,6 +137,7 @@ export function UserAvatar({ x, y, hoverText, userID }) {
             const newPosition = spriteRef.current.data.getLocalPosition(spriteRef.current.parent);
             spriteRef.current.x = newPosition.x;
             spriteRef.current.y = newPosition.y;
+            
         }
     }, [app, spriteRef]);
 

@@ -103,6 +103,7 @@ const Inject = () => {
                             remoteUsersData={remoteUsersData}
                             userID={userID}
                             size={containerSize}
+                            category={location.displayData.title || 'Unknown'}
                         />
                     </Application>
                 </div>
@@ -132,12 +133,13 @@ const Inject = () => {
         >
             <div style={{ 
                     display: 'flex', 
-                    justifyContent: 'flex-end', 
+                    justifyContent: 'space-between', 
                     padding: '5px',
                     backgroundColor: '#f0f0f0',
                     borderBottom: '1px solid #ddd'
                 }}>
-                    <button onClick={handleChatToggle} >
+                    <div>{location.displayData.title}</div>
+                    <button onClick={handleChatToggle} style={{display: 'flex',justifyContent: 'flex-end', backgroundColor: 'lightblue'}} >
                         {showChat ? 'Hide Chat' : 'Show Chat'}
                     </button>
             </div>
