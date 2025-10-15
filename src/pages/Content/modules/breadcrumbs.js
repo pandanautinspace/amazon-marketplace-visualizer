@@ -136,4 +136,21 @@ const getMarketplaceLocationData = (document, window) => {
 
 };
 
-export { getBreadcrumbs, isProductPage, queryParams, pathParts, navTitle, getPageType, getBreadcrumbsStorefront, getDepartmentInfo, getMarketplaceLocationData };
+const getCurrentCategory = (location) => {
+    if (!location) return null;
+
+    switch (location.pageType) {
+        case 'browse':
+            return location.displayData?.title || null;
+        case 'search':
+            return location.navData?.k || null;
+        case 'product':
+            return location.displayData?.title || null;
+        case 'storefront':
+            return location.displayData?.storefrontBreadcrumbs[0] || null;
+        default:
+            return null;
+    }
+};
+
+export { getBreadcrumbs, isProductPage, queryParams, pathParts, navTitle, getPageType, getBreadcrumbsStorefront, getDepartmentInfo, getMarketplaceLocationData, getCurrentCategory };
