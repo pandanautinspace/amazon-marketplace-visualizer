@@ -7,3 +7,4 @@ export * from './useResize';
 export * from './useMarketplaceLocation';
 export * from './constants';
 export { db } from '../../modules/firebase.js';
+export { ChatComponent } from './ChatComponent.jsx';

@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { doc, setDoc, collection, onSnapshot } from 'firebase/firestore';
+import {
+    addDoc,
+    doc,
+    setDoc,
+    collection,
+    onSnapshot,
+    serverTimestamp,
+    query,
+    orderBy,
+} from 'firebase/firestore';
 
 import { db } from '../../modules/firebase';
 import { getMarketplaceLocationData } from '../../modules/breadcrumbs';
@@ -11,7 +20,7 @@ export const useUserID = () => {
     const [userID, setUserID] = useState(null);
 
     useEffect(() => {
-        chrome.storage.local.get("userID").then((result) => {
+        chrome.storage.local.get('userID').then((result) => {
             if (result.userID) {
                 setUserID(result.userID);
             }
@@ -21,14 +30,118 @@ export const useUserID = () => {
     return userID;
 };
 
+/////////////////////////////////////////
 /**
- * Hook to subscribe to all users in Firestore
+ * Hook to manage messages in Firestore. fetching, sending updating
+ */
+export const useMessages = () => {
+    const [messages, setMessages] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Subscribe to messages collection
+    useEffect(() => {
+        setLoading(true);
+
+        // Create a query sorted by timestamp
+        const messagesQuery = query(
+            collection(db, 'messages'),
+            orderBy('timestamp', 'asc')
+        );
+
+        const unsubscribe = onSnapshot(
+            messagesQuery,
+            (snapshot) => {
+                const messagesData = {};
+                snapshot.forEach((docSnap) => {
+                    messagesData[docSnap.id] = docSnap.data();
+                });
+                setMessages(messagesData);
+                setLoading(false);
+            },
+            (error) => {
+                console.error('Error listening to messages collection:', error);
+                setError(error);
+                setLoading(false);
+            }
+        );
+
+        return () => unsubscribe();
+    }, []);
+
+    // Function to send a new message
+    const sendMessage = async (
+        userId,
+        messageContent,
+        messageType = 'text'
+    ) => {
+        try {
+            const messageData = {
+                userId,
+                message: messageContent,
+                type: messageType,
+                timestamp: serverTimestamp(),
+            };
+
+            const docRef = await addDoc(
+                collection(db, 'messages'),
+                messageData
+            );
+            return docRef.id;
+        } catch (error) {
+            console.error('Error sending message:', error);
+            setError(error);
+            throw error;
+        }
+    };
+
+    // // Function to update an existing message
+    // const updateMessage = async (messageId, updates) => {
+    //     try {
+    //         const messageRef = doc(db, 'messages', messageId);
+    //         await updateDoc(messageRef, updates);
+    //     } catch (error) {
+    //         console.error('Error updating message:', error);
+    //         setError(error);
+    //         throw error;
+    //     }
+    // };
+
+    // Get messages as an array sorted by timestamp
+    const getMessagesArray = () => {
+        return Object.entries(messages)
+            .map(([id, data]) => ({ id, ...data }))
+            .sort((a, b) => {
+                // Handle cases where timestamp might be null/undefined
+                const timeA = a.timestamp?.toMillis
+                    ? a.timestamp.toMillis()
+                    : 0;
+                const timeB = b.timestamp?.toMillis
+                    ? b.timestamp.toMillis()
+                    : 0;
+                return timeA - timeB;
+            });
+    };
+
+    return {
+        messages,
+        messagesArray: getMessagesArray(),
+        loading,
+        error,
+        sendMessage,
+        // updateMessage
+    };
+};
+////////////////////////////////////////////////////////
+
+/**
+ * Hook to subscribe to all messages in Firestore
  */
 export const useRemoteUsers = () => {
     const [remoteUsersData, setRemoteUsersData] = useState({});
 
     useEffect(() => {
-        const usersCollection = collection(db, "users");
+        const usersCollection = collection(db, 'users');
 
         const unsubscribe = onSnapshot(
             usersCollection,
@@ -40,7 +153,7 @@ export const useRemoteUsers = () => {
                 setRemoteUsersData(usersData);
             },
             (error) => {
-                console.error("Error listening to users collection:", error);
+                console.error('Error listening to users collection:', error);
             }
         );
 
@@ -57,13 +170,13 @@ export const useLocationUpdater = (userID, location) => {
     useEffect(() => {
         if (!userID || !location) return;
 
-        const userRef = doc(db, "users", userID);
+        const userRef = doc(db, 'users', userID);
         setDoc(userRef, { location }, { merge: false })
             .then(() => {
-                console.log("Location updated for:", userID);
+                console.log('Location updated for:', userID);
             })
             .catch((error) => {
-                console.error("Error writing document: ", error);
+                console.error('Error writing document: ', error);
             });
     }, [userID, location]);
 };
@@ -81,7 +194,7 @@ export const useContainerSize = (containerRef) => {
         const handleResize = () => {
             setSize({
                 width: element.clientWidth,
-                height: element.clientHeight
+                height: element.clientHeight,
             });
         };
 
@@ -100,7 +213,11 @@ export const useContainerSize = (containerRef) => {
 /**
  * Hook to handle resizing functionality for the inject component
  */
-export const useResize = (containerRef, appRef, initialSize = { width: 300, height: 300 }) => {
+export const useResize = (
+    containerRef,
+    appRef,
+    initialSize = { width: 300, height: 300 }
+) => {
     const [size, setSize] = useState(initialSize);
 
     const startResizing = (e) => {
@@ -108,16 +225,18 @@ export const useResize = (containerRef, appRef, initialSize = { width: 300, heig
 
         const startX = e.clientX;
         const startY = e.clientY;
-        const startWidth = containerRef.current?.offsetWidth || initialSize.width;
-        const startHeight = containerRef.current?.offsetHeight || initialSize.height;
+        const startWidth =
+            containerRef.current?.offsetWidth || initialSize.width;
+        const startHeight =
+            containerRef.current?.offsetHeight || initialSize.height;
 
         const handleMouseMove = (e) => {
             const newWidth = startWidth - (e.clientX - startX);
             const newHeight = startHeight + (e.clientY - startY);
 
             const updatedSize = {
-                width: Math.max(100, newWidth),  // Minimum width of 100px
-                height: Math.max(100, newHeight), // Minimum height of 100px
+                width: Math.max(200, newWidth), // Minimum width of 100px
+                height: Math.max(200, newHeight), // Minimum height of 100px
             };
 
             setSize(updatedSize);
@@ -129,15 +248,15 @@ export const useResize = (containerRef, appRef, initialSize = { width: 300, heig
         };
 
         const handleMouseUp = () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-            window.removeEventListener("mouseup", handleMouseUp);
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
         };
 
-        window.addEventListener("mousemove", handleMouseMove);
-        window.addEventListener("mouseup", handleMouseUp);
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
     };
 
-    return { size, startResizing };
+    return { size, startResizing, setSize };
 };
 
 /**
@@ -151,7 +270,10 @@ export const useMarketplaceLocation = () => {
     useEffect(() => {
         // Check for location changes periodically
         const interval = setInterval(() => {
-            const currentLocation = getMarketplaceLocationData(document, window);
+            const currentLocation = getMarketplaceLocationData(
+                document,
+                window
+            );
 
             if (JSON.stringify(currentLocation) !== JSON.stringify(location)) {
                 console.log('Marketplace location changed:', currentLocation);
