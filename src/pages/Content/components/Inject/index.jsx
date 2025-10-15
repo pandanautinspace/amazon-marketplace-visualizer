@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState} from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 // PIXI.js setup
 import 'pixi.js/unsafe-eval';
@@ -85,7 +85,7 @@ const Inject = () => {
         setShowChat(!showChat);
     };
 
-    
+
     // Container content based on what's active
     const renderContent = () => {
         return (
@@ -107,20 +107,20 @@ const Inject = () => {
                     </Application>
                 </div>
                 {showChat && (
-                    <div style={{ 
-                        width: '300px', 
+                    <div style={{
+                        width: '300px',
                         height: '100%',
                         borderLeft: '1px solid #ddd',
                         backgroundColor: '#ffffff'
                     }} >
                         <ChatComponent />
                     </div>
-                ) }
+                )}
             </div>
         );
     };
 
-    
+
     return (
         <div
             style={{
@@ -130,19 +130,19 @@ const Inject = () => {
             }}
             ref={containerRef}
         >
-            <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'flex-end', 
-                    padding: '5px',
-                    backgroundColor: '#f0f0f0',
-                    borderBottom: '1px solid #ddd'
-                }}>
-                    <button onClick={handleChatToggle} >
-                        {showChat ? 'Hide Chat' : 'Show Chat'}
-                    </button>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                padding: '5px',
+                backgroundColor: '#f0f0f0',
+                borderBottom: '1px solid #ddd'
+            }}>
+                <button onClick={handleChatToggle} >
+                    {showChat ? 'Hide Chat' : 'Show Chat'}
+                </button>
             </div>
-                {/* Render either the PIXI visualizer or the chat component */}
-                {renderContent()}
+            {/* Render either the PIXI visualizer or the chat component */}
+            {renderContent()}
             {/* Resize Handle */}
             <div
                 onMouseDown={startResizing}
