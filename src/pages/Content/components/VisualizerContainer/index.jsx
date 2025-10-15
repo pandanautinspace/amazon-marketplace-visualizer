@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserAvatar } from '../UserAvatar';
-import { Rectangle } from 'pixi.js';
+import { CategoryBox } from '../CategoryBox';
 
 /**
  * Component that renders the PIXI visualization with user sprites
@@ -19,7 +19,7 @@ export const VisualizerContainer = ({
     const currentUser = userID ? remoteUsersData[userID] : null;
 
     return (
-        <pixiContainer eventMode='dynamic' hitArea={new Rectangle(0, 0, size.width, size.height)} zIndex={0}>
+        <pixiContainer>
             {/* Render other users in a grid layout */}
             {otherUsers.map(([id, data], index) => (
                 <UserAvatar
@@ -41,6 +41,10 @@ export const VisualizerContainer = ({
                     userID={userID}
                 />
             )}
+            <CategoryBox x={size.width - 25} y={size.height - 25} url={"https://www.amazon.fr/s?i=fashion&rh=n%3A714112031&fs=true&ref=lp_714112031_sar"} categoryName={"Fashion"} />
+            <CategoryBox x={size.width - 90} y={size.height - 25} url={"https://www.amazon.fr/s?i=electronics&rh=n%3A13921051&fs=true&ref=lp_13921051_sar"} categoryName={"Electronics"} />
+            <CategoryBox x={size.width - 155} y={size.height - 25} url={"https://www.amazon.fr/s?i=computers&rh=n%3A565108&fs=true&ref=lp_565108_sar"} categoryName={"Computers"} />
+            <CategoryBox x={size.width - 220} y={size.height - 25} url={"https://www.amazon.fr/s?i=beauty&rh=n%3A11055951&fs=true&ref=lp_11055951_sar"} categoryName={"Beauty"} />
         </pixiContainer>
     );
 };

@@ -1,7 +1,6 @@
 import {
     Assets,
     Texture,
-    Rectangle,
 } from 'pixi.js';
 import React, { useCallback } from 'react';
 import {
