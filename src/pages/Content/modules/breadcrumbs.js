@@ -143,7 +143,7 @@ export const getCurrentCategory = (location) => {
         case 'browse':
             return location.displayData?.title || null;
         case 'search':
-            return location.navData?.k || null;
+            return location.displayData?.title || null;
         case 'product':
             return location.displayData?.title || null;
         case 'storefront':
