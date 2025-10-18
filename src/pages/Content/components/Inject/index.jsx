@@ -123,13 +123,25 @@ const Inject = () => {
                         resizeTo={divRef}
                         ref={appRef}
                     >
-                        <VisualizerContainer
-                            containerRef={divRef}
-                            remoteUsersData={remoteUsersData}
-                            userID={userID}
-                            size={containerSize}
-                            categories={categories}
-                        />
+                        {(Object.keys(remoteUsersData).length > 0) && userID !== null ? (
+                            <VisualizerContainer
+                                containerRef={divRef}
+                                remoteUsersData={remoteUsersData}
+                                userID={userID}
+                                size={containerSize}
+                                categories={categories}
+                            />) : (
+                            <Container x={containerSize.width / 2} y={containerSize.height / 2}>
+                                <Graphics
+                                    draw={(g) => {
+                                        g.clear();
+                                        g.lineStyle(4, 0x3498db);
+                                        g.arc(0, 0, 30, 0, Math.PI * 1.5);
+                                    }}
+                                    rotation={Date.now() * 0.005}
+                                />
+                            </Container>
+                        )}
                     </Application>
                 </div>
                 {showChat && (

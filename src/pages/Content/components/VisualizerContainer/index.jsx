@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { UserAvatar, CurrentUserAvatar } from '../UserAvatar';
 import { CategoryBox } from '../CategoryBox';
-import { getCurrentCategory } from '../../modules/breadcrumbs';
+import { getCurrentCategory, getUrlFromLocation } from '../../modules/breadcrumbs';
 import { DragAndDropProvider } from '../DragAndDrop/DnDContext';
+
+const positionFromIndex = (index) => {
+    const leftMult = index % 2 === 0 ? -1 : 1;
+    const topMult = index % 4 < 2 ? -1 : 1;
+    const xInt = (Math.floor(index / 4) + 1) * leftMult;
+
+    const x = 50 + (xInt * 50);
+    const y = -topMult * 50;
+    return { x, y };
+}
 
 const WorldVisualizer = ({
     remoteUsersData,
@@ -11,27 +21,36 @@ const WorldVisualizer = ({
     size
 }) => {
     return (<>
-        {Object.entries(remoteUsersData).map(([id, data]) => {
+        {Object.entries(remoteUsersData).map(([id, data], index) => {
             if (id === userID) return null;
+            const category = getCurrentCategory(data.location);
+            if (category) return null; // Skip users in departments
+            const { x, y } = positionFromIndex(index);
             return (
-                <UserAvatar
-                    key={id}
-                    userID={id}
-                    x={Math.random() * size.width}
-                    y={Math.random() * size.height}
-                    hoverText={data.location}
-                />
+                <pixiContainer key={id} scale={0.25}>
+                    <UserAvatar
+                        userID={id}
+                        x={x + size.width * 2}
+                        y={y + size.height * 4 - 50}
+                        hoverText={data.location}
+                    />
+                </pixiContainer>
             );
         })}
-        {categories.map((cat) => (
-            <CategoryBox
-                key={cat.categoryName}
-                x={size.width - (25 + (categories.indexOf(cat) * 65))}
-                y={size.height - 25}
-                url={`https://www.amazon.fr/b?node=${cat.nodeId}`}
-                categoryName={cat.categoryName}
-            />
-        ))}
+        {categories.map((cat, index) => {
+            console.log("Category Name:", cat.categoryName, "index:", index);
+            const { x, y } = positionFromIndex(index);
+            console.log("Position:", x, y);
+            return (
+                <CategoryBox
+                    key={cat.categoryName}
+                    x={x + size.width / 2}
+                    y={y + size.height / 2}
+                    url={cat.url ?? `https://www.amazon.fr/b?node=${cat.nodeId}`}
+                    categoryName={cat.categoryName}
+                />
+            )
+        })}
     </>)
 }
 
@@ -96,6 +115,11 @@ export const VisualizerContainer = ({
         return acc;
     }, {});
 
+    const usersCategories = Object.keys(usersByCategory).filter((v, i, a) => a.indexOf(v) === i).map(cat => ({ categoryName: cat, url: getUrlFromLocation(usersByCategory[cat][0].location) }));
+    console.log('userscategories', usersCategories);
+    const allCategories = [...categories, ...usersCategories].filter((v, i, a) => a.findIndex(item => item.categoryName === v.categoryName) === i);
+    console.log('allCategories', allCategories);
+
     useEffect(() => {
         if (categoryState === null) {
             setViewWorld(true);
@@ -135,6 +159,22 @@ export const VisualizerContainer = ({
                     />
                 )}
 
+                {viewWorld && categoryState && (
+                    <pixiText
+                        text="Return to Department"
+                        x={size.width / 2}
+                        y={size.height - 50}
+                        style={{
+                            fontSize: 12,
+                        }}
+                        anchor={0.5}
+                        interactive={true}
+                        cursor='pointer'
+                        eventMode='static'
+                        onPointerTap={() => setViewWorld(false)}
+                    />
+                )}
+
                 {currentUser && (
                     <CurrentUserAvatar
                         key="self"
@@ -149,7 +189,7 @@ export const VisualizerContainer = ({
                     <WorldVisualizer
                         remoteUsersData={remoteUsersData}
                         userID={userID}
-                        categories={categories}
+                        categories={allCategories}
                         size={size}
                     />
                 )}
