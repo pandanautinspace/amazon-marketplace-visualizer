@@ -1,4 +1,4 @@
-const getBreadcrumbs = (document) => {
+export const getBreadcrumbs = (document) => {
     const breadcrumbs = [];
     document.querySelectorAll('#wayfinding-breadcrumbs_feature_div li a').forEach((el) => {
         breadcrumbs.push({
@@ -9,7 +9,7 @@ const getBreadcrumbs = (document) => {
     return breadcrumbs;
 };
 
-const getBreadcrumbsStorefront = (document) => {
+export const getBreadcrumbsStorefront = (document) => {
     const breadcrumbs = [];
     document.querySelectorAll('nav[class^="Breadcrumbs"] li a').forEach((el) => {
         breadcrumbs.push({
@@ -20,11 +20,11 @@ const getBreadcrumbsStorefront = (document) => {
     return breadcrumbs;
 }
 
-const isProductPage = (window) => {
+export const isProductPage = (window) => {
     return window.location.href.includes('/dp/');
 };
 
-const queryParams = (window) => {
+export const queryParams = (window) => {
     const params = {};
     const queryString = window.location.search.substring(1);
     const vars = queryString.split('&');
@@ -35,16 +35,16 @@ const queryParams = (window) => {
     return params;
 };
 
-const pathParts = (window) => {
+export const pathParts = (window) => {
     return window.location.pathname.split('/').filter(part => part);
 };
 
-const navTitle = (document) => {
+export const navTitle = (document) => {
     const titleElement = document.querySelector('#nav-subnav .nav-b');
     return titleElement ? titleElement.innerText.trim() : '';
 }
 
-const getDepartmentInfo = (document) => {
+export const getDepartmentInfo = (document) => {
     const departmentsDiv = document.querySelector('#departments');
     if (departmentsDiv) {
         const deptHeaders = document.querySelectorAll('li[id^="n/"]:not(.s-navigation-indent-2)');
@@ -74,7 +74,7 @@ const getDepartmentInfo = (document) => {
     }
 }
 
-const getPageType = (window) => {
+export const getPageType = (window) => {
     const path = pathParts(window);
     if (path.includes('dp')) return 'product';
     if (path.includes('s')) return 'search';
@@ -84,7 +84,7 @@ const getPageType = (window) => {
     return 'other';
 }
 
-const getMarketplaceLocationData = (document, window) => {
+export const getMarketplaceLocationData = (document, window) => {
     const pageType = getPageType(window);
     const breadcrumbs = getBreadcrumbs(document).map(crumb => crumb.text);
     const storefrontBreadcrumbs = getBreadcrumbsStorefront(document).map(crumb => crumb.text);
@@ -136,7 +136,7 @@ const getMarketplaceLocationData = (document, window) => {
 
 };
 
-const getCurrentCategory = (location) => {
+export const getCurrentCategory = (location) => {
     if (!location) return null;
 
     switch (location.pageType) {
@@ -153,4 +153,24 @@ const getCurrentCategory = (location) => {
     }
 };
 
-export { getBreadcrumbs, isProductPage, queryParams, pathParts, navTitle, getPageType, getBreadcrumbsStorefront, getDepartmentInfo, getMarketplaceLocationData, getCurrentCategory };
+export const getUrlFromLocation = (location) => {
+    if (!location) return null;
+    switch (location.pageType) {
+        case 'browse':
+            return `https://www.amazon.fr/b?node=${location.navData.node}`;
+        case 'product':
+            return `https://www.amazon.fr/dp/${location.navData.productId}`;
+        case 'storefront':
+            const storePath = location.navData.storeNavPath;
+            if (storePath && storePath.length > 0) {
+                return `https://www.amazon.fr/${storePath.join('/')}`;
+            }
+            return null;
+        case 'search':
+            return `https://www.amazon.fr/s?k=${location.navData.k}&i=${location.navData.i}`;
+        case 'other':
+            return `https://www.amazon.fr/`;
+        default:
+            return null;
+    }
+};
