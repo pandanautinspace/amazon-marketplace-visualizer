@@ -85,40 +85,12 @@ const Inject = () => {
         setShowChat(!showChat);
     };
 
-
-    // Container content based on what's active
-    const renderContent = () => {
-        return (
-            <div style={{ display: 'flex', flexDirection: 'row', height: '100%' }}>
-                <div style={{ ...BACKGROUND_STYLES, flex: 1 }} ref={divRef}>
-                    <Application
-                        autoStart
-                        sharedTicker
-                        backgroundAlpha={0}
-                        resizeTo={divRef}
-                        ref={appRef}
-                    >
-                        <VisualizerContainer
-                            containerRef={divRef}
-                            remoteUsersData={remoteUsersData}
-                            userID={userID}
-                            size={containerSize}
-                        />
-                    </Application>
-                </div>
-                {showChat && (
-                    <div style={{
-                        width: '300px',
-                        height: '100%',
-                        borderLeft: '1px solid #ddd',
-                        backgroundColor: '#ffffff'
-                    }} >
-                        <ChatComponent />
-                    </div>
-                )}
-            </div>
-        );
-    };
+    const categories = [
+        { categoryName: "Fashion", nodeId: "11961521031" },
+        { categoryName: "Electronics", nodeId: "13921051" },
+        { categoryName: "Home", nodeId: "57004031" },
+        { categoryName: "Beauty", nodeId: "197858031" }
+    ];
 
 
     return (
@@ -142,7 +114,35 @@ const Inject = () => {
                 </button>
             </div>
             {/* Render either the PIXI visualizer or the chat component */}
-            {renderContent()}
+            <div style={{ display: 'flex', flexDirection: 'row', height: '100%' }}>
+                <div style={{ ...BACKGROUND_STYLES, flex: 1 }} ref={divRef}>
+                    <Application
+                        autoStart
+                        sharedTicker
+                        backgroundAlpha={0}
+                        resizeTo={divRef}
+                        ref={appRef}
+                    >
+                        <VisualizerContainer
+                            containerRef={divRef}
+                            remoteUsersData={remoteUsersData}
+                            userID={userID}
+                            size={containerSize}
+                            categories={categories}
+                        />
+                    </Application>
+                </div>
+                {showChat && (
+                    <div style={{
+                        width: '300px',
+                        height: '100%',
+                        borderLeft: '1px solid #ddd',
+                        backgroundColor: '#ffffff'
+                    }} >
+                        <ChatComponent />
+                    </div>
+                )}
+            </div>
             {/* Resize Handle */}
             <div
                 onMouseDown={startResizing}

@@ -1,9 +1,73 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { UserAvatar, CurrentUserAvatar } from '../UserAvatar';
 import { CategoryBox } from '../CategoryBox';
 import { getCurrentCategory } from '../../modules/breadcrumbs';
 import { DragAndDropProvider } from '../DragAndDrop/DnDContext';
 
+const WorldVisualizer = ({
+    remoteUsersData,
+    userID,
+    categories,
+    size
+}) => {
+    return (<>
+        {Object.entries(remoteUsersData).map(([id, data]) => {
+            if (id === userID) return null;
+            return (
+                <UserAvatar
+                    key={id}
+                    userID={id}
+                    x={Math.random() * size.width}
+                    y={Math.random() * size.height}
+                    hoverText={data.location}
+                />
+            );
+        })}
+        {categories.map((cat) => (
+            <CategoryBox
+                key={cat.categoryName}
+                x={size.width - (25 + (categories.indexOf(cat) * 65))}
+                y={size.height - 25}
+                url={`https://www.amazon.fr/b?node=${cat.nodeId}`}
+                categoryName={cat.categoryName}
+            />
+        ))}
+    </>)
+}
+
+const DepartmentVisualizer = ({
+    departmentUsersData,
+    userID,
+    setViewWorld,
+    size
+}) => {
+    return (
+        <>
+            {departmentUsersData?.map((user, index) => (
+                <UserAvatar
+                    key={user.id}
+                    x={50 + (index * 50)}
+                    y={30}
+                    hoverText={user.location}
+                    userID={user.id}
+                />
+            ))}
+            <pixiText
+                text="View World"
+                x={size.width / 2}
+                y={size.height - 50}
+                style={{
+                    fontSize: 12,
+                }}
+                anchor={0.5}
+                interactive={true}
+                cursor='pointer'
+                eventMode='static'
+                onPointerTap={() => setViewWorld(true)}
+            />
+        </>
+    )
+}
 /**
  * Component that renders the PIXI visualization with user sprites
  */
@@ -11,11 +75,14 @@ export const VisualizerContainer = ({
     containerRef,
     remoteUsersData,
     userID,
+    categories,
     size
 }) => {
     // Get current user data
     const currentUser = userID ? remoteUsersData[userID] : null;
     const currentCategory = currentUser ? getCurrentCategory(currentUser.location) : null;
+    const [viewWorld, setViewWorld] = useState(currentCategory === null);
+    const [categoryState, setCategoryState] = useState(currentCategory);
 
     // Group users by category, excluding current user
     const usersByCategory = Object.entries(remoteUsersData).reduce((acc, [id, data]) => {
@@ -29,14 +96,26 @@ export const VisualizerContainer = ({
         return acc;
     }, {});
 
+    useEffect(() => {
+        if (categoryState === null) {
+            setViewWorld(true);
+        } else {
+            setViewWorld(false);
+        }
+    }, [categoryState]);
+
+    useEffect(() => {
+        if (currentCategory === categoryState) return;
+        setCategoryState(currentCategory);
+    }, [currentCategory]);
+
     return (
         <DragAndDropProvider>
             <pixiContainer>
-                {/* Current category users */}
-                {currentCategory && usersByCategory[currentCategory] && (
+                {categoryState && usersByCategory[categoryState] && (
                     <pixiContainer y={20}>
                         <pixiText
-                            text={`Users in ${currentCategory}: ${usersByCategory[currentCategory].length + 1}`}
+                            text={`Users in ${categoryState}: ${usersByCategory[categoryState].length + 1}`}
                             x={10}
                             y={0}
                             style={{
@@ -44,19 +123,18 @@ export const VisualizerContainer = ({
                                 fill: 0x000000,
                             }}
                         />
-                        {usersByCategory[currentCategory].map((user, index) => (
-                            <UserAvatar
-                                key={user.id}
-                                x={50 + (index * 50)}
-                                y={30}
-                                hoverText={user.location}
-                                userID={user.id}
-                            />
-                        ))}
                     </pixiContainer>
                 )}
 
-                {/* Render current user's avatar in the center */}
+                {!viewWorld && categoryState && (
+                    <DepartmentVisualizer
+                        departmentUsersData={usersByCategory[categoryState]}
+                        userID={userID}
+                        setViewWorld={setViewWorld}
+                        size={size}
+                    />
+                )}
+
                 {currentUser && (
                     <CurrentUserAvatar
                         key="self"
@@ -67,11 +145,14 @@ export const VisualizerContainer = ({
                     />
                 )}
 
-                {/* Keep existing category boxes */}
-                <CategoryBox x={size.width - 25} y={size.height - 25} url={"https://www.amazon.fr/s?i=fashion&rh=n%3A714112031&fs=true&ref=lp_714112031_sar"} categoryName={"Fashion"} />
-                <CategoryBox x={size.width - 90} y={size.height - 25} url={"https://www.amazon.fr/s?i=electronics&rh=n%3A13921051&fs=true&ref=lp_13921051_sar"} categoryName={"Electronics"} />
-                <CategoryBox x={size.width - 155} y={size.height - 25} url={"https://www.amazon.fr/s?i=computers&rh=n%3A565108&fs=true&ref=lp_565108_sar"} categoryName={"Computers"} />
-                <CategoryBox x={size.width - 220} y={size.height - 25} url={"https://www.amazon.fr/s?i=beauty&rh=n%3A11055951&fs=true&ref=lp_11055951_sar"} categoryName={"Beauty"} />
+                {viewWorld && (
+                    <WorldVisualizer
+                        remoteUsersData={remoteUsersData}
+                        userID={userID}
+                        categories={categories}
+                        size={size}
+                    />
+                )}
             </pixiContainer>
         </DragAndDropProvider>
     );

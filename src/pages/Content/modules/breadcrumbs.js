@@ -141,9 +141,9 @@ export const getCurrentCategory = (location) => {
 
     switch (location.pageType) {
         case 'browse':
-            return location.displayData?.title || null;
+            return location.displayData?.title || location.displayData?.departmentInfo?.[0] || null;
         case 'search':
-            return location.displayData?.title || null;
+            return location.displayData?.title || location.displayData?.departmentInfo?.[0] || null;
         case 'product':
             return location.displayData?.title || null;
         case 'storefront':
