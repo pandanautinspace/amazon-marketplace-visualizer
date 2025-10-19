@@ -12,6 +12,7 @@ import { useApplication, useTick } from '@pixi/react';
 import { getUrlFromLocation } from '../../modules/breadcrumbs';
 import { useDraggable } from '../../components/DragAndDrop/draggable';
 import { useDropTarget } from '../../components/DragAndDrop/dropTarget';
+import { spritesheetLocs } from '../../modules/spritesheet_locs';
 
 export function UserAvatar({ x, y, hoverText, userID }) {
     const avRef = useRef(null)
@@ -96,12 +97,11 @@ export function CurrentUserAvatar({ x, y, hoverText, userID }) {
     useEffect(() => {
         if (texture === Texture.EMPTY) {
             const imageURL = `https://api.dicebear.com/9.x/adventurer/png?seed=${userID}&size=64`;
-            Assets
-                .load({
-                    src: imageURL,
-                    parser: 'loadTextures',
-                    name: `user-avatar-${userID}`
-                })
+            Assets.load({
+                src: imageURL,
+                parser: 'loadTextures',
+                name: `user-avatar-${userID}`
+            })
                 .then((result) => {
                     setTexture(result)
                     console.log('User texture loaded');

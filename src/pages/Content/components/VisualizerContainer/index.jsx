@@ -3,7 +3,12 @@ import { UserAvatar, CurrentUserAvatar } from '../UserAvatar';
 import { CategoryBox } from '../CategoryBox';
 import { getCurrentCategory, getUrlFromLocation } from '../../modules/breadcrumbs';
 import { DragAndDropProvider } from '../DragAndDrop/DnDContext';
-import { useApplication } from '@pixi/react';
+import { useApplication, extend } from '@pixi/react';
+import { chromeSpriteSheetLocs as sprite } from '../../modules/spritesheet_locs';
+import { Texture, Assets, TilingSprite } from 'pixi.js';
+import { CompositeTilemap } from '@pixi/tilemap';
+
+extend({ TilingSprite, CompositeTilemap });
 
 const positionFromIndex = (index) => {
     const leftMult = index % 2 === 0 ? -1 : 1;
@@ -21,7 +26,14 @@ const WorldVisualizer = ({
     categories,
     size
 }) => {
+    const tilemapRef = React.useRef(null);
+    if (tilemapRef.current) {
+        tilemapRef.current.clear();
+    }
     return (<>
+        <pixiContainer scale={0.125} zIndex={-50}>
+            <pixiCompositeTilemap ref={tilemapRef} />
+        </pixiContainer>
         {Object.entries(remoteUsersData).map(([id, data], index) => {
             if (id === userID) return null;
             const category = getCurrentCategory(data.location);
@@ -43,10 +55,11 @@ const WorldVisualizer = ({
             return (
                 <CategoryBox
                     key={cat.categoryName}
-                    x={x + size.width / 2}
-                    y={y + size.height / 2}
+                    x={(x + size.width / 2)}
+                    y={(y + size.height / 2)}
                     url={cat.url ?? `https://www.amazon.fr/b?node=${cat.nodeId}`}
                     categoryName={cat.categoryName}
+                    tilemapRef={tilemapRef}
                 />
             )
         })}
@@ -89,7 +102,6 @@ const DepartmentVisualizer = ({
 }
 
 const MapNavigator = ({ size, setMapOffset, setMapScale }) => {
-    console.log('MapNavigator size', size);
     return (
         <>
             <pixiContainer zIndex={500}>
@@ -206,6 +218,47 @@ export const VisualizerContainer = ({
     const [categoryState, setCategoryState] = useState(currentCategory);
     const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
     const [mapScale, setMapScale] = useState(1);
+    const [assetsLoaded, setAssetsLoaded] = useState(false);
+
+    useEffect(() => {
+        if (!assetsLoaded) {
+            const spritesToLoad = [];
+            Object.values(sprite.buildings).forEach((buildingArray, buildingIdx) => {
+                buildingArray.forEach((buildingSrc, imgIdx) => {
+                    spritesToLoad.push({
+                        src: buildingSrc,
+                        parser: 'loadTextures',
+                        alias: `building-${buildingIdx}-${imgIdx}`
+                    });
+                });
+            });
+            Object.values(sprite.decor).forEach((decorSrc, imgIdx) => {
+                spritesToLoad.push({
+                    src: decorSrc,
+                    parser: 'loadTextures',
+                    alias: `decor-${imgIdx}`
+                });
+            });
+            Object.values(sprite.land).forEach((landSrc, imgIdx) => {
+                spritesToLoad.push({
+                    src: landSrc,
+                    parser: 'loadTextures',
+                    alias: `land-${imgIdx}`
+                });
+            });
+            Object.values(sprite.road).forEach((roadSrc, imgIdx) => {
+                spritesToLoad.push({
+                    src: roadSrc,
+                    parser: 'loadTextures',
+                    alias: `road-${imgIdx}`
+                });
+            });
+            // Load all sprites
+            Assets.load(spritesToLoad).then(() => {
+                setAssetsLoaded(true);
+            });
+        }
+    }, [assetsLoaded]);
 
     // Group users by category, excluding current user
     const usersByCategory = Object.entries(remoteUsersData).reduce((acc, [id, data]) => {
@@ -235,8 +288,30 @@ export const VisualizerContainer = ({
         setCategoryState(currentCategory);
     }, [currentCategory]);
 
+    if (!assetsLoaded) {
+        return (
+            <pixiText
+                text="Loading assets..."
+                x={size.width / 2}
+                y={size.height / 2}
+                style={{
+                    fontSize: 24,
+                    fill: 0x000000,
+                }}
+                anchor={0.5}
+            />
+        );
+    }
     return (
         <DragAndDropProvider>
+            <pixiTilingSprite
+                texture={Assets.get('land-0')}
+                width={size.width}
+                height={size.height}
+                tileScale={{ x: 0.25, y: 0.25 }}
+                tilePosition={{ x: mapOffset.x * 0.5, y: mapOffset.y * 0.5 }}
+                zIndex={-100}
+            />
             <MapNavigator size={size} setMapOffset={setMapOffset} setMapScale={setMapScale} />
             <pixiContainer scale={mapScale} x={mapOffset.x} y={mapOffset.y}>
                 {categoryState && usersByCategory[categoryState] && (

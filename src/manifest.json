@@ -33,9 +33,12 @@
       "resources": [
         "content.styles.css",
         "icon-128.png",
-        "icon-34.png"
+        "icon-34.png",
+        "*.png"
       ],
-      "matches": []
+      "matches": [
+        "*://*.amazon.fr/*"
+      ]
     }
   ],
   "permissions": [

@@ -29,7 +29,7 @@ const getColorFromCategory = (name) => {
 };
 
 
-export function CategoryBox({ x, y, url, categoryName }) {
+export function CategoryBox({ x, y, url, categoryName, tilemapRef }) {
     const contRef = React.useRef(null);
     useDropTarget(categoryName, contRef, {
         onDrop: () => {
@@ -37,7 +37,19 @@ export function CategoryBox({ x, y, url, categoryName }) {
         }
     });
     const color = getColorFromCategory(categoryName);
-
+    if (tilemapRef.current) {
+        for (let i = 0; i <= 5; i++) {
+            for (let j = 0; j < 2; j++) {
+                tilemapRef.current.tile('road-12', x * 8 + i * 64, y * 8 + j * 64 + 512 - 128);
+            }
+        }
+        for (let i = 0; i <= 5; i++) {
+            for (let j = 0; j < 1; j++) {
+                tilemapRef.current.tile('road-15', x * 8 + i * 64, y * 8 + j * 64 + 512);
+            }
+        }
+        tilemapRef.current.tile('building-1-0', x * 8, y * 8);
+    }
     return (
         <pixiContainer
             onClick={() => {
@@ -47,17 +59,11 @@ export function CategoryBox({ x, y, url, categoryName }) {
             eventMode='static'
             ref={contRef}
         >
-            <pixiGraphics
-                draw={(g) => {
-                    g.clear();
-                    g.rect(x - 25, y - 25, 50, 50).fill(color);
-                }}
-            />
             <pixiText
                 text={categoryName}
                 x={x}
                 y={y}
-                anchor={0.5}
+                anchor={0}
                 zIndex={100}
                 style={{
                     fontSize: 12,
