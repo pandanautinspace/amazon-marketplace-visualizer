@@ -3,6 +3,7 @@ import { UserAvatar, CurrentUserAvatar } from '../UserAvatar';
 import { CategoryBox } from '../CategoryBox';
 import { getCurrentCategory, getUrlFromLocation } from '../../modules/breadcrumbs';
 import { DragAndDropProvider } from '../DragAndDrop/DnDContext';
+import { useApplication } from '@pixi/react';
 
 const positionFromIndex = (index) => {
     const leftMult = index % 2 === 0 ? -1 : 1;
@@ -38,9 +39,7 @@ const WorldVisualizer = ({
             );
         })}
         {categories.map((cat, index) => {
-            console.log("Category Name:", cat.categoryName, "index:", index);
             const { x, y } = positionFromIndex(index);
-            console.log("Position:", x, y);
             return (
                 <CategoryBox
                     key={cat.categoryName}
@@ -63,13 +62,14 @@ const DepartmentVisualizer = ({
     return (
         <>
             {departmentUsersData?.map((user, index) => (
-                <UserAvatar
-                    key={user.id}
-                    x={50 + (index * 50)}
-                    y={30}
-                    hoverText={user.location}
-                    userID={user.id}
-                />
+                <pixiContainer key={user.id} scale={0.25}>
+                    <UserAvatar
+                        x={50 + (index * 50)}
+                        y={30}
+                        hoverText={user.location}
+                        userID={user.id}
+                    />
+                </pixiContainer>
             ))}
             <pixiText
                 text="View World"
@@ -87,6 +87,108 @@ const DepartmentVisualizer = ({
         </>
     )
 }
+
+const MapNavigator = ({ size, setMapOffset, setMapScale }) => {
+    console.log('MapNavigator size', size);
+    return (
+        <>
+            <pixiContainer zIndex={500}>
+                <pixiGraphics
+                    x={0}
+                    y={size.height / 2}
+                    anchor={{
+                        x: 0,
+                        y: 0.5
+                    }}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        g.moveTo(0, 0).lineTo(20, -10).lineTo(20, 10).closePath().fill(0x000000);
+                    }}
+                    onPointerTap={() => setMapOffset(prev => ({ x: prev.x + 20, y: prev.y }))}
+                />
+                <pixiGraphics
+                    x={size.width}
+                    y={size.height / 2}
+                    anchor={{
+                        x: 1,
+                        y: 0.5
+                    }}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        g.moveTo(0, 0).lineTo(-20, -10).lineTo(-20, 10).closePath().fill(0x000000);
+                    }}
+                    onPointerTap={() => setMapOffset(prev => ({ x: prev.x - 20, y: prev.y }))}
+                />
+                <pixiGraphics
+                    x={size.width / 2}
+                    y={0}
+                    anchor={{
+                        x: 0.5,
+                        y: 0
+                    }}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        g.moveTo(0, 0).lineTo(-10, 20).lineTo(10, 20).closePath().fill(0x000000);
+                    }}
+                    onPointerTap={() => setMapOffset(prev => ({ x: prev.x, y: prev.y + 20 }))}
+                />
+                <pixiGraphics
+                    x={size.width / 2}
+                    y={size.height - 10}
+                    anchor={{
+                        x: 0.5,
+                        y: 1
+                    }}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        g.moveTo(0, 0).lineTo(-10, -20).lineTo(10, -20).closePath().fill(0x000000);
+                    }}
+                    onPointerTap={() => setMapOffset(prev => ({ x: prev.x, y: prev.y - 20 }))}
+                />
+                <pixiGraphics
+                    x={size.width - 30}
+                    y={30}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        // Zoom in: circle with plus
+                        g.circle(0, 0, 12).stroke({ width: 2, color: 0x000000 });
+                        g.moveTo(-6, 0).lineTo(6, 0).stroke({ width: 2, color: 0x000000 });
+                        g.moveTo(0, -6).lineTo(0, 6).stroke({ width: 2, color: 0x000000 });
+                    }}
+                    onPointerTap={() => {
+                        setMapScale(prev => prev * 1.25);
+                    }}
+                />
+                <pixiGraphics
+                    x={size.width - 30}
+                    y={60}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        // Zoom out: circle with minus
+                        g.circle(0, 0, 12).stroke({ width: 2, color: 0x000000 });
+                        g.moveTo(-6, 0).lineTo(6, 0).stroke({ width: 2, color: 0x000000 });
+                    }}
+                    onPointerTap={() => {
+                        setMapScale(prev => prev * 0.8);
+                    }}
+                />
+            </pixiContainer>
+        </>
+    )
+}
+
 /**
  * Component that renders the PIXI visualization with user sprites
  */
@@ -102,6 +204,8 @@ export const VisualizerContainer = ({
     const currentCategory = currentUser ? getCurrentCategory(currentUser.location) : null;
     const [viewWorld, setViewWorld] = useState(currentCategory === null);
     const [categoryState, setCategoryState] = useState(currentCategory);
+    const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
+    const [mapScale, setMapScale] = useState(1);
 
     // Group users by category, excluding current user
     const usersByCategory = Object.entries(remoteUsersData).reduce((acc, [id, data]) => {
@@ -116,9 +220,7 @@ export const VisualizerContainer = ({
     }, {});
 
     const usersCategories = Object.keys(usersByCategory).filter((v, i, a) => a.indexOf(v) === i).map(cat => ({ categoryName: cat, url: getUrlFromLocation(usersByCategory[cat][0].location) }));
-    console.log('userscategories', usersCategories);
     const allCategories = [...categories, ...usersCategories].filter((v, i, a) => a.findIndex(item => item.categoryName === v.categoryName) === i);
-    console.log('allCategories', allCategories);
 
     useEffect(() => {
         if (categoryState === null) {
@@ -135,19 +237,18 @@ export const VisualizerContainer = ({
 
     return (
         <DragAndDropProvider>
-            <pixiContainer>
+            <MapNavigator size={size} setMapOffset={setMapOffset} setMapScale={setMapScale} />
+            <pixiContainer scale={mapScale} x={mapOffset.x} y={mapOffset.y}>
                 {categoryState && usersByCategory[categoryState] && (
-                    <pixiContainer y={20}>
-                        <pixiText
-                            text={`Users in ${categoryState}: ${usersByCategory[categoryState].length + 1}`}
-                            x={10}
-                            y={0}
-                            style={{
-                                fontSize: 14,
-                                fill: 0x000000,
-                            }}
-                        />
-                    </pixiContainer>
+                    <pixiText
+                        text={`Users in ${categoryState}: ${usersByCategory[categoryState].length + 1}`}
+                        x={10}
+                        y={20}
+                        style={{
+                            fontSize: 14,
+                            fill: 0x000000,
+                        }}
+                    />
                 )}
 
                 {!viewWorld && categoryState && (

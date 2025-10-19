@@ -135,8 +135,7 @@ const Inject = () => {
                                 <Graphics
                                     draw={(g) => {
                                         g.clear();
-                                        g.lineStyle(4, 0x3498db);
-                                        g.arc(0, 0, 30, 0, Math.PI * 1.5);
+                                        g.arc(0, 0, 30, 0, Math.PI * 1.5).stroke({ width: 4, color: 0x000000 });
                                     }}
                                     rotation={Date.now() * 0.005}
                                 />

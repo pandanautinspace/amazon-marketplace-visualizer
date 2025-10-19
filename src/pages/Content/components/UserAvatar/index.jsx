@@ -119,7 +119,6 @@ export function CurrentUserAvatar({ x, y, hoverText, userID }) {
                 onPointerUp={onPointerUp}
                 onPointerMove={onPointerMove}
                 onPointerUpOutside={onPointerUpOutside}
-                scale={1.5}
                 texture={texture}
                 cursor={dragging ? 'grabbing' : 'grab'}
                 x={position.x}
