@@ -80,11 +80,17 @@ export function CurrentUserAvatar({ x, y, hoverText, userID }) {
 
     const [texture, setTexture] = useState(Texture.EMPTY);
 
-    const { position, dragging, dropTarget, eventHandlers } = useDraggable(avRef, { x, y });
+    const { position, dragging, setPosition, eventHandlers } = useDraggable(avRef, { x, y });
     const onPointerDown = eventHandlers.pointerdown;
     const onPointerUp = eventHandlers.pointerup;
     const onPointerMove = eventHandlers.pointermove;
     const onPointerUpOutside = eventHandlers.pointerupoutside;
+
+    useEffect(() => {
+        if (position.x !== x || position.y !== y) {
+            setPosition({ x, y });
+        }
+    }, [x, y]);
 
     const clickCallBack = useCallback(() => {
         if (!hoverText) return;
@@ -114,13 +120,14 @@ export function CurrentUserAvatar({ x, y, hoverText, userID }) {
             <pixiSprite
                 ref={avRef}
                 anchor={0.5}
-                eventMode={'static'}
+                eventMode={'dynamic'}
                 onPointerDown={onPointerDown}
                 onPointerUp={onPointerUp}
-                onPointerMove={onPointerMove}
+                onGlobalPointerMove={onPointerMove}
                 onPointerUpOutside={onPointerUpOutside}
                 texture={texture}
                 cursor={dragging ? 'grabbing' : 'grab'}
+                scale={0.25}
                 x={position.x}
                 y={position.y}
                 zIndex={101}
