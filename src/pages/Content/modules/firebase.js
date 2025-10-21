@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, getCountFromServer, where, writeBatch, query, collection, doc, getDocs, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, getCountFromServer, where, writeBatch, query, collection, doc, getDocs, setDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -52,7 +52,6 @@ async function createNPCs(desiredCount = 20) {
             batch.set(npcRef, {
                 location: randomCategory,
                 isNPC: true
-                //lastUpdated: serverTimestamp()
             });
         }
 
@@ -102,7 +101,50 @@ async function deleteAllNPCUsers() {
     }
 }
 
+// Function to update all NPCs with random locations
+async function updateAllNPCLocations() {
+    try {
+        const npcQuery = query(collection(db, 'users'), where('isNPC', '==', true));
+        const snapshot = await getDocs(npcQuery);
+
+        const batch = writeBatch(db);
+        snapshot.forEach((npcDoc) => {
+            const randomCategory = SAMPLE_CATEGORIES[Math.floor(Math.random() * SAMPLE_CATEGORIES.length)];
+            batch.update(npcDoc.ref, {
+                location: randomCategory
+            });
+        });
+
+        await batch.commit();
+    } catch (error) {
+        console.error('Error updating NPCs:', error);
+    }
+}
+
+// Start the periodic update
+let updateInterval;
+
+function startNPCUpdates(intervalSeconds = 10) {
+    // Clear any existing interval
+    if (updateInterval) {
+        clearInterval(updateInterval);
+    }
+
+    // Start new interval
+    updateInterval = setInterval(() => {
+        updateAllNPCLocations();
+    }, intervalSeconds * 1000);
+
+    console.log(`NPC location updates started (every ${intervalSeconds} seconds)`);
+}
+
+// Export the functions
+export { startNPCUpdates };
+
+
+// Uncomment below to reset NPCs on module load
 //await deleteAllNPCUsers();
 console.log('Creating NPCs...');
-await createNPCs(10);
+// Comment below line to prevent automatic NPC creation on load
+await createNPCs(20);
 console.log('NPC creation process completed.');
