@@ -1,20 +1,206 @@
-import React from 'react';
-import { UserAvatar } from '../UserAvatar';
+import React, { useEffect, useState } from 'react';
+import { UserAvatar, CurrentUserAvatar } from '../UserAvatar';
 import { CategoryBox } from '../CategoryBox';
-import { getCurrentCategory } from '../../modules/breadcrumbs';
+import { getCurrentCategory, getUrlFromLocation } from '../../modules/breadcrumbs';
+import { DragAndDropProvider } from '../DragAndDrop/DnDContext';
+import { useApplication, extend } from '@pixi/react';
+import { chromeSpriteSheetLocs as sprite } from '../../modules/spritesheet_locs';
+import { Texture, Assets, TilingSprite } from 'pixi.js';
+import { CompositeTilemap } from '@pixi/tilemap';
 
-import { Rectangle } from 'pixi.js';
-import FloatingNotification from './FloatingNotification';
+extend({ TilingSprite, CompositeTilemap });
 
+const positionFromIndex = (index) => {
+    const leftMult = index % 2 === 0 ? -1 : 1;
+    const topMult = index % 4 < 2 ? -1 : 1;
+    const xInt = (Math.floor(index / 4) + 1) * leftMult;
 
-import { Application, extend } from '@pixi/react';
-import { Container, Graphics, Sprite, Text } from 'pixi.js';
-extend({
-    Container,
-    Graphics,
-    Sprite,
-    Text  
-});
+    const x = 50 + (xInt * 50);
+    const y = -topMult * 50;
+    return { x, y };
+}
+
+const WorldVisualizer = ({
+    remoteUsersData,
+    userID,
+    categories,
+    size
+}) => {
+    const tilemapRef = React.useRef(null);
+    if (tilemapRef.current) {
+        tilemapRef.current.clear();
+    }
+    return (<>
+        <pixiContainer scale={0.125} zIndex={-50}>
+            <pixiCompositeTilemap ref={tilemapRef} />
+        </pixiContainer>
+        {Object.entries(remoteUsersData).map(([id, data], index) => {
+            if (id === userID) return null;
+            const category = getCurrentCategory(data.location);
+            if (category) return null; // Skip users in departments
+            const { x, y } = positionFromIndex(index);
+            return (
+                <pixiContainer key={id} scale={0.25}>
+                    <UserAvatar
+                        userID={id}
+                        x={x + size.width * 2}
+                        y={y + size.height * 4 - 50}
+                        hoverText={data.location}
+                    />
+                </pixiContainer>
+            );
+        })}
+        {categories.map((cat, index) => {
+            const { x, y } = positionFromIndex(index);
+            return (
+                <CategoryBox
+                    key={cat.categoryName}
+                    x={(x + size.width / 2)}
+                    y={(y + size.height / 2)}
+                    url={cat.url ?? `https://www.amazon.fr/b?node=${cat.nodeId}`}
+                    categoryName={cat.categoryName}
+                    tilemapRef={tilemapRef}
+                />
+            )
+        })}
+    </>)
+}
+
+const DepartmentVisualizer = ({
+    departmentUsersData,
+    userID,
+    setViewWorld,
+    size
+}) => {
+    return (
+        <>
+            {departmentUsersData?.map((user, index) => (
+                <pixiContainer key={user.id} scale={0.25}>
+                    <UserAvatar
+                        x={50 + (index * 50)}
+                        y={30}
+                        hoverText={user.location}
+                        userID={user.id}
+                    />
+                </pixiContainer>
+            ))}
+            <pixiText
+                text="View World"
+                x={size.width / 2}
+                y={size.height - 50}
+                style={{
+                    fontSize: 12,
+                }}
+                anchor={0.5}
+                interactive={true}
+                cursor='pointer'
+                eventMode='static'
+                onPointerTap={() => setViewWorld(true)}
+            />
+        </>
+    )
+}
+
+const MapNavigator = ({ size, setMapOffset, setMapScale }) => {
+    return (
+        <>
+            <pixiContainer zIndex={500}>
+                <pixiGraphics
+                    x={0}
+                    y={size.height / 2}
+                    anchor={{
+                        x: 0,
+                        y: 0.5
+                    }}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        g.moveTo(0, 0).lineTo(20, -10).lineTo(20, 10).closePath().fill(0x000000);
+                    }}
+                    onPointerTap={() => setMapOffset(prev => ({ x: prev.x + 20, y: prev.y }))}
+                />
+                <pixiGraphics
+                    x={size.width}
+                    y={size.height / 2}
+                    anchor={{
+                        x: 1,
+                        y: 0.5
+                    }}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        g.moveTo(0, 0).lineTo(-20, -10).lineTo(-20, 10).closePath().fill(0x000000);
+                    }}
+                    onPointerTap={() => setMapOffset(prev => ({ x: prev.x - 20, y: prev.y }))}
+                />
+                <pixiGraphics
+                    x={size.width / 2}
+                    y={0}
+                    anchor={{
+                        x: 0.5,
+                        y: 0
+                    }}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        g.moveTo(0, 0).lineTo(-10, 20).lineTo(10, 20).closePath().fill(0x000000);
+                    }}
+                    onPointerTap={() => setMapOffset(prev => ({ x: prev.x, y: prev.y + 20 }))}
+                />
+                <pixiGraphics
+                    x={size.width / 2}
+                    y={size.height - 10}
+                    anchor={{
+                        x: 0.5,
+                        y: 1
+                    }}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        g.moveTo(0, 0).lineTo(-10, -20).lineTo(10, -20).closePath().fill(0x000000);
+                    }}
+                    onPointerTap={() => setMapOffset(prev => ({ x: prev.x, y: prev.y - 20 }))}
+                />
+                <pixiGraphics
+                    x={size.width - 30}
+                    y={30}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        // Zoom in: circle with plus
+                        g.circle(0, 0, 12).stroke({ width: 2, color: 0x000000 });
+                        g.moveTo(-6, 0).lineTo(6, 0).stroke({ width: 2, color: 0x000000 });
+                        g.moveTo(0, -6).lineTo(0, 6).stroke({ width: 2, color: 0x000000 });
+                    }}
+                    onPointerTap={() => {
+                        setMapScale(prev => prev * 1.25);
+                    }}
+                />
+                <pixiGraphics
+                    x={size.width - 30}
+                    y={60}
+                    cursor='pointer'
+                    eventMode='static'
+                    draw={g => {
+                        g.clear();
+                        // Zoom out: circle with minus
+                        g.circle(0, 0, 12).stroke({ width: 2, color: 0x000000 });
+                        g.moveTo(-6, 0).lineTo(6, 0).stroke({ width: 2, color: 0x000000 });
+                    }}
+                    onPointerTap={() => {
+                        setMapScale(prev => prev * 0.8);
+                    }}
+                />
+            </pixiContainer>
+        </>
+    )
+}
+
 /**
  * Component that renders the PIXI visualization with user sprites
  */
@@ -22,12 +208,57 @@ export const VisualizerContainer = ({
     containerRef,
     remoteUsersData,
     userID,
-    size,
-    category
+    categories,
+    size
 }) => {
     // Get current user data
     const currentUser = userID ? remoteUsersData[userID] : null;
     const currentCategory = currentUser ? getCurrentCategory(currentUser.location) : null;
+    const [viewWorld, setViewWorld] = useState(currentCategory === null);
+    const [categoryState, setCategoryState] = useState(currentCategory);
+    const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
+    const [mapScale, setMapScale] = useState(1);
+    const [assetsLoaded, setAssetsLoaded] = useState(false);
+
+    useEffect(() => {
+        if (!assetsLoaded) {
+            const spritesToLoad = [];
+            Object.values(sprite.buildings).forEach((buildingArray, buildingIdx) => {
+                buildingArray.forEach((buildingSrc, imgIdx) => {
+                    spritesToLoad.push({
+                        src: buildingSrc,
+                        parser: 'loadTextures',
+                        alias: `building-${buildingIdx}-${imgIdx}`
+                    });
+                });
+            });
+            Object.values(sprite.decor).forEach((decorSrc, imgIdx) => {
+                spritesToLoad.push({
+                    src: decorSrc,
+                    parser: 'loadTextures',
+                    alias: `decor-${imgIdx}`
+                });
+            });
+            Object.values(sprite.land).forEach((landSrc, imgIdx) => {
+                spritesToLoad.push({
+                    src: landSrc,
+                    parser: 'loadTextures',
+                    alias: `land-${imgIdx}`
+                });
+            });
+            Object.values(sprite.road).forEach((roadSrc, imgIdx) => {
+                spritesToLoad.push({
+                    src: roadSrc,
+                    parser: 'loadTextures',
+                    alias: `road-${imgIdx}`
+                });
+            });
+            // Load all sprites
+            Assets.load(spritesToLoad).then(() => {
+                setAssetsLoaded(true);
+            });
+        }
+    }, [assetsLoaded]);
 
     // Group users by category, excluding current user
     const usersByCategory = Object.entries(remoteUsersData).reduce((acc, [id, data]) => {
@@ -41,48 +272,104 @@ export const VisualizerContainer = ({
         return acc;
     }, {});
 
+    const usersCategories = Object.keys(usersByCategory).filter((v, i, a) => a.indexOf(v) === i).map(cat => ({ categoryName: cat, url: getUrlFromLocation(usersByCategory[cat][0].location) }));
+    const allCategories = [...categories, ...usersCategories].filter((v, i, a) => a.findIndex(item => item.categoryName === v.categoryName) === i);
+
+    useEffect(() => {
+        if (categoryState === null) {
+            setViewWorld(true);
+        } else {
+            setViewWorld(false);
+        }
+    }, [categoryState]);
+
+    useEffect(() => {
+        if (currentCategory === categoryState) return;
+        setCategoryState(currentCategory);
+    }, [currentCategory]);
+
+    if (!assetsLoaded) {
+        return (
+            <pixiText
+                text="Loading assets..."
+                x={size.width / 2}
+                y={size.height / 2}
+                style={{
+                    fontSize: 24,
+                    fill: 0x000000,
+                }}
+                anchor={0.5}
+            />
+        );
+    }
     return (
-        <pixiContainer>
-            {/* Current category users */}
-            {currentCategory && usersByCategory[currentCategory] && (
-                <pixiContainer y={20}>
+        <DragAndDropProvider>
+            <pixiTilingSprite
+                texture={Assets.get('land-0')}
+                width={size.width}
+                height={size.height}
+                tileScale={{ x: 0.25, y: 0.25 }}
+                tilePosition={{ x: mapOffset.x * 0.5, y: mapOffset.y * 0.5 }}
+                zIndex={-100}
+            />
+            <MapNavigator size={size} setMapOffset={setMapOffset} setMapScale={setMapScale} />
+            <pixiContainer scale={mapScale} x={mapOffset.x} y={mapOffset.y}>
+                {categoryState && usersByCategory[categoryState] && (
                     <pixiText
-                        text={`Users in ${currentCategory}: ${usersByCategory[currentCategory].length + 1}`}
+                        text={`Users in ${categoryState}: ${usersByCategory[categoryState].length + 1}`}
                         x={10}
-                        y={0}
+                        y={20}
                         style={{
                             fontSize: 14,
                             fill: 0x000000,
                         }}
                     />
-                    {usersByCategory[currentCategory].map((user, index) => (
-                        <UserAvatar
-                            key={user.id}
-                            x={50 + (index * 50)}
-                            y={30}
-                            hoverText={user.location}
-                            userID={user.id}
-                        />
-                    ))}
-                </pixiContainer>
-            )}
+                )}
 
-            {/* Render current user's avatar in the center */}
-            {currentUser && (
-                <UserAvatar
-                    key="self"
-                    x={size.width / 2}
-                    y={size.height / 2}
-                    hoverText={currentUser.location}
-                    userID={userID}
-                />
-            )}
+                {!viewWorld && categoryState && (
+                    <DepartmentVisualizer
+                        departmentUsersData={usersByCategory[categoryState]}
+                        userID={userID}
+                        setViewWorld={setViewWorld}
+                        size={size}
+                    />
+                )}
 
-            {/* Keep existing category boxes */}
-            <CategoryBox x={size.width - 25} y={size.height - 25} url={"https://www.amazon.fr/s?i=fashion&rh=n%3A714112031&fs=true&ref=lp_714112031_sar"} categoryName={"Fashion"} />
-            <CategoryBox x={size.width - 90} y={size.height - 25} url={"https://www.amazon.fr/s?i=electronics&rh=n%3A13921051&fs=true&ref=lp_13921051_sar"} categoryName={"Electronics"} />
-            <CategoryBox x={size.width - 155} y={size.height - 25} url={"https://www.amazon.fr/s?i=computers&rh=n%3A565108&fs=true&ref=lp_565108_sar"} categoryName={"Computers"} />
-            <CategoryBox x={size.width - 220} y={size.height - 25} url={"https://www.amazon.fr/s?i=beauty&rh=n%3A11055951&fs=true&ref=lp_11055951_sar"} categoryName={"Beauty"} />
-        </pixiContainer>
+                {viewWorld && categoryState && (
+                    <pixiText
+                        text="Return to Department"
+                        x={size.width / 2}
+                        y={size.height - 50}
+                        style={{
+                            fontSize: 12,
+                        }}
+                        anchor={0.5}
+                        interactive={true}
+                        cursor='pointer'
+                        eventMode='static'
+                        onPointerTap={() => setViewWorld(false)}
+                    />
+                )}
+
+                {currentUser && (
+                    <CurrentUserAvatar
+                        key="self"
+                        x={size.width / 2}
+                        y={size.height / 2}
+                        hoverText={currentUser.location}
+                        userID={userID}
+                    />
+                )}
+
+                {viewWorld && (
+                    <WorldVisualizer
+                        remoteUsersData={remoteUsersData}
+                        userID={userID}
+                        categories={allCategories}
+                        size={size}
+                    />
+                )}
+            </pixiContainer>
+        </DragAndDropProvider>
     );
 };
