@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useDragAndDrop } from "./DnDContext";
+import { useApplication } from "@pixi/react";
 
 export const useDraggable = (ref, initialPos = { x: 0, y: 0 }) => {
     const { handleDrop, findTarget } = useDragAndDrop();
@@ -7,6 +8,7 @@ export const useDraggable = (ref, initialPos = { x: 0, y: 0 }) => {
     const [dragging, setDragging] = useState(false);
     const [dropTarget, setDropTarget] = useState(null);
     const offset = useRef({ x: 0, y: 0 });
+    const app = useApplication().app;
 
     const onDragStart = (event) => {
         event.stopPropagation();
@@ -15,12 +17,14 @@ export const useDraggable = (ref, initialPos = { x: 0, y: 0 }) => {
             x: pos.x - position.x,
             y: pos.y - position.y,
         };
+        app.stage.cursor = 'grabbing';
         setDragging(true);
     };
 
     const onDragMove = (event) => {
         if (!dragging) return;
         const pos = event.data.getLocalPosition(ref.current.parent);
+        console.log('Dragging to:', pos);
         const newPos = {
             x: pos.x - offset.current.x,
             y: pos.y - offset.current.y,
@@ -36,6 +40,7 @@ export const useDraggable = (ref, initialPos = { x: 0, y: 0 }) => {
 
     const onDragEnd = (event) => {
         if (!dragging) return;
+        app.stage.cursor = 'default';
         setDragging(false);
         if (ref.current) {
             const bounds = ref.current.getBounds();
@@ -46,6 +51,7 @@ export const useDraggable = (ref, initialPos = { x: 0, y: 0 }) => {
 
     return {
         position,
+        setPosition,
         dragging,
         dropTarget,
         eventHandlers: {

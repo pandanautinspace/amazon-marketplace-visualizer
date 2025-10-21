@@ -47,7 +47,7 @@ const Inject = () => {
 
     // Button state
     const [showChat, setShowChat] = useState(false);
-    const [mapScale, setMapScale] = useState(1);
+    const [mapScale, setMapScale] = useState(2);
 
     // Update user location in Firestore when it changes
     useLocationUpdater(userID, location);

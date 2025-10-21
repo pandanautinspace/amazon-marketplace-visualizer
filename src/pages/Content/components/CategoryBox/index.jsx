@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { useDropTarget } from '../../components/DragAndDrop/dropTarget';
-import { Rectangle } from 'pixi.js';
+import { Rectangle, Assets } from 'pixi.js';
 
 const getColorFromCategory = (name) => {
     let hash = 0;
@@ -9,7 +9,7 @@ const getColorFromCategory = (name) => {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     const saturation = 50; // Constant 50%
-    const value = 72; // Constant 72%
+    const value = 100; // Constant 72%
     const hue = (Math.abs(hash) % 360);
 
     // Convert HSV to RGB
@@ -29,26 +29,35 @@ const getColorFromCategory = (name) => {
 };
 
 
-export function CategoryBox({ x, y, url, categoryName, tilemapRef }) {
+export function CategoryBox({ x, y, url, categoryName, tilemap }) {
     const contRef = React.useRef(null);
     useDropTarget(categoryName, contRef, {
         onDrop: () => {
             window.location.href = url;
         }
     });
+    const [hovered, setHovered] = React.useState(false);
     const color = getColorFromCategory(categoryName);
-    if (tilemapRef.current) {
+    const hexColor = `#${color.toString(16).padStart(6, '0')}`;
+    console.log('Category color for', categoryName, 'is', color, "in hex is", hexColor);
+    if (tilemap) {
         for (let i = 0; i <= 5; i++) {
             for (let j = 0; j < 2; j++) {
-                tilemapRef.current.tile('road-12', x * 8 + i * 64, y * 8 + j * 64 + 512 - 128);
+                tilemap.tile('road-12', x * 8 + i * 64, y * 8 + j * 64 + 512 - 128);
             }
         }
         for (let i = 0; i <= 5; i++) {
             for (let j = 0; j < 1; j++) {
-                tilemapRef.current.tile('road-15', x * 8 + i * 64, y * 8 + j * 64 + 512);
+                tilemap.tile('road-15', x * 8 + i * 64, y * 8 + j * 64 + 512);
             }
         }
-        tilemapRef.current.tile('building-1-0', x * 8, y * 8);
+        for (let i = 0; i <= 5; i++) {
+            for (let j = 0; j < 1; j++) {
+                tilemap.tile('road-9', x * 8 + i * 64, y * 8 + j * 64 + 512 - 64 * 3);
+            }
+        }
+        tilemap.tile('building-1-0', x * 8, y * 8);
+        tilemap.tile('decor-17', x * 8 + 32, y * 8 + 32);
     }
     return (
         <pixiContainer
@@ -58,18 +67,39 @@ export function CategoryBox({ x, y, url, categoryName, tilemapRef }) {
             cursor='pointer'
             eventMode='static'
             ref={contRef}
+            hitArea={new Rectangle(x, y, 48, 48)}
+            onPointerOver={() => setHovered(true)}
+            onPointerOut={() => setHovered(false)}
         >
-            <pixiText
-                text={categoryName}
-                x={x}
-                y={y}
-                anchor={0}
-                zIndex={100}
-                style={{
-                    fontSize: 12,
-                    fill: 0xFFFFFF,
-                }}
-            />
+            <pixiContainer>
+                <pixiText
+                    text={categoryName}
+                    x={x + 6}
+                    y={y + 4}
+                    anchor={0}
+                    zIndex={100}
+                    style={{
+                        fontSize: 8,
+                        fill: 0x000000,
+                        stroke: 0xFFFFFF,
+                        strokeThickness: 1,
+                    }}
+                    resolution={16}
+                />
+            </pixiContainer>
+            {hovered && (
+                <pixiSprite
+                    x={x}
+                    y={y}
+                    anchor={0}
+                    texture={Assets.get('building-1-0')}
+                    tint={hexColor}
+                    alpha={0.4}
+                    zIndex={-51}
+                    width={48}
+                    height={48}
+                />
+            )}
         </pixiContainer>
     );
 }
