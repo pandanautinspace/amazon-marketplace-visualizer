@@ -16,7 +16,7 @@ import {
     RESIZE_HANDLE_STYLES,
     DEFAULT_SIZE
 } from './constants';
-
+import VerticalSlider from '../../components/VerticalSlider/index.jsx';
 import ChatComponent from './ChatComponent';
 // Extend PIXI components for use with @pixi/react
 extend({
@@ -47,6 +47,7 @@ const Inject = () => {
 
     // Button state
     const [showChat, setShowChat] = useState(false);
+    const [mapScale, setMapScale] = useState(1);
 
     // Update user location in Firestore when it changes
     useLocationUpdater(userID, location);
@@ -114,8 +115,25 @@ const Inject = () => {
                         {showChat ? 'Hide Chat' : 'Show Chat'}
                     </button>
             </div>
-            {/* Render either the PIXI visualizer or the chat component */}
-            <div style={{ display: 'flex', flexDirection: 'row', height: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', height: 'calc(100% - 37px)' }}>
+                {/* Slider Panel */}
+                <div style={{
+                    width: '50px',
+                    borderRight: '1px solid #ddd',
+                    backgroundColor: '#ffffff',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}>
+                    <VerticalSlider 
+                        value={mapScale}
+                        onChange={setMapScale}
+                        min={0.5}
+                        max={2}
+                    />
+                </div>
+
+                {/* Main Canvas */}
                 <div style={{ ...BACKGROUND_STYLES, flex: 1 }} ref={divRef}>
                     <Application
                         autoStart
@@ -124,38 +142,29 @@ const Inject = () => {
                         resizeTo={divRef}
                         ref={appRef}
                     >
-                        {(Object.keys(remoteUsersData).length > 0) && userID !== null ? (
-                            <VisualizerContainer
-                                containerRef={divRef}
-                                remoteUsersData={remoteUsersData}
-                                userID={userID}
-                                size={containerSize}
-                                categories={categories}
-                            />) : (
-                            <Container x={containerSize.width / 2} y={containerSize.height / 2}>
-                                <Graphics
-                                    draw={(g) => {
-                                        g.clear();
-                                        g.arc(0, 0, 30, 0, Math.PI * 1.5).stroke({ width: 4, color: 0x000000 });
-                                    }}
-                                    rotation={Date.now() * 0.005}
-                                />
-                            </Container>
-                        )}
+                        <VisualizerContainer
+                            containerRef={containerRef}
+                            remoteUsersData={remoteUsersData}
+                            userID={userID}
+                            size={containerSize}
+                            categories={categories}
+                            mapScale={mapScale}
+                            setMapScale={setMapScale}
+                        />
                     </Application>
                 </div>
+
+                {/* Chat Panel */}
                 {showChat && (
                     <div style={{
                         width: '300px',
-                        height: '100%',
                         borderLeft: '1px solid #ddd',
                         backgroundColor: '#ffffff'
-                    }} >
+                    }}>
                         <ChatComponent />
                     </div>
                 )}
             </div>
-            {/* Resize Handle */}
             <div
                 onMouseDown={startResizing}
                 style={RESIZE_HANDLE_STYLES}

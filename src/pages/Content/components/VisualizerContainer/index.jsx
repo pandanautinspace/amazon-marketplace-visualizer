@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { UserAvatar, CurrentUserAvatar } from '../UserAvatar';
 import { CategoryBox } from '../CategoryBox';
 import { getCurrentCategory, getUrlFromLocation } from '../../modules/breadcrumbs';
 import { DragAndDropProvider } from '../DragAndDrop/DnDContext';
 import { useApplication, extend } from '@pixi/react';
 import { chromeSpriteSheetLocs as sprite } from '../../modules/spritesheet_locs';
-import { Texture, Assets, TilingSprite } from 'pixi.js';
+import { Texture, Assets, TilingSprite, Rectangle, Container } from 'pixi.js';
 import { CompositeTilemap } from '@pixi/tilemap';
 
 extend({ TilingSprite, CompositeTilemap });
@@ -18,6 +18,27 @@ const positionFromIndex = (index) => {
     const x = 50 + (xInt * 50);
     const y = -topMult * 50;
     return { x, y };
+}
+
+// Create a background layer that will handle all dragging
+const BackgroundLayer = ({ size, mapOffset, isDragging, onDrag }) => {
+    return (
+        <pixiGraphics
+            x={0}
+            y={0}
+            width={size.width}
+            height={size.height}
+            zIndex={-150}
+            cursor={isDragging ? 'grabbing' : 'grab'}
+            eventMode='static'
+            interactive={true}
+            draw={g => {
+                g.clear();
+                g.rect(0, 0, size.width, size.height).fill(0xFFFFFF, 0.01); // Almost transparent fill
+            }}
+            onPointerDown={onDrag}
+        />
+    );
 }
 
 const WorldVisualizer = ({
@@ -178,7 +199,7 @@ const MapNavigator = ({ size, setMapOffset, setMapScale }) => {
                         g.moveTo(0, -6).lineTo(0, 6).stroke({ width: 2, color: 0x000000 });
                     }}
                     onPointerTap={() => {
-                        setMapScale(prev => prev * 1.25);
+                        setMapScale(prev => Math.min(prev * 1.25, 2));
                     }}
                 />
                 <pixiGraphics
@@ -193,7 +214,7 @@ const MapNavigator = ({ size, setMapOffset, setMapScale }) => {
                         g.moveTo(-6, 0).lineTo(6, 0).stroke({ width: 2, color: 0x000000 });
                     }}
                     onPointerTap={() => {
-                        setMapScale(prev => prev * 0.8);
+                        setMapScale(prev => Math.max(prev * 0.8, 0.5));
                     }}
                 />
             </pixiContainer>
@@ -209,7 +230,9 @@ export const VisualizerContainer = ({
     remoteUsersData,
     userID,
     categories,
-    size
+    size,
+    mapScale,
+    setMapScale  // We receive this prop from Inject
 }) => {
     // Get current user data
     const currentUser = userID ? remoteUsersData[userID] : null;
@@ -217,8 +240,12 @@ export const VisualizerContainer = ({
     const [viewWorld, setViewWorld] = useState(currentCategory === null);
     const [categoryState, setCategoryState] = useState(currentCategory);
     const [mapOffset, setMapOffset] = useState({ x: 0, y: 0 });
-    const [mapScale, setMapScale] = useState(1);
     const [assetsLoaded, setAssetsLoaded] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const [lastPointerPosition, setLastPointerPosition] = useState(null);
+    const [pointerTarget, setPointerTarget] = useState(null);
+    const worldContainerRef = useRef(null);
+    const contentRef = useRef(null);
 
     useEffect(() => {
         if (!assetsLoaded) {
@@ -288,6 +315,101 @@ export const VisualizerContainer = ({
         setCategoryState(currentCategory);
     }, [currentCategory]);
 
+    // Improved drag handling
+    const handleBackgroundDrag = (e) => {
+        setIsDragging(true);
+        setLastPointerPosition({ x: e.clientX, y: e.clientY });
+        setPointerTarget('background');
+    };
+
+    // Handle pointer events on the main container
+    const handlePointerDown = (e) => {
+        // Store the original target to distinguish between background drag and interaction with elements
+        if (e.target.eventMode === 'static' && e.target.cursor === 'grab') {
+            setIsDragging(true);
+            setLastPointerPosition({ x: e.clientX, y: e.clientY });
+            setPointerTarget('background');
+            e.stopPropagation();
+        }
+    };
+
+    const handlePointerMove = (e) => {
+        if (!isDragging) return;
+        
+        // Only process drag movement if we're dragging the background
+        if (pointerTarget === 'background') {
+            const dx = e.clientX - lastPointerPosition.x;
+            const dy = e.clientY - lastPointerPosition.y;
+
+            setMapOffset(prev => ({
+                x: prev.x + dx,
+                y: prev.y + dy
+            }));
+
+            setLastPointerPosition({ x: e.clientX, y: e.clientY });
+        }
+    };
+
+    const handlePointerUp = () => {
+        setIsDragging(false);
+        setLastPointerPosition(null);
+        setPointerTarget(null);
+    };
+
+    // Handle pinch zoom
+    const handleTouchStart = (e) => {
+        if (e.touches.length === 2) {
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const distance = Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+            );
+            setLastPointerPosition({ distance });
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (e.touches.length === 2 && lastPointerPosition?.distance) {
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const newDistance = Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch2.clientY
+            );
+
+            const scale = newDistance / lastPointerPosition.distance;
+            setMapScale(prev => Math.min(Math.max(prev * scale, 0.5), 2));
+            setLastPointerPosition({ distance: newDistance });
+        }
+    };
+
+    // Handle wheel zoom
+    const handleWheel = (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        setMapScale(prev => Math.min(Math.max(prev * zoomFactor, 0.5), 2));
+    };
+
+    useEffect(() => {
+        const element = containerRef.current;
+        if (!element) return;
+
+        element.addEventListener('wheel', handleWheel);
+        window.addEventListener('pointerup', handlePointerUp);
+        window.addEventListener('pointerleave', handlePointerUp);
+        element.addEventListener('touchstart', handleTouchStart);
+        element.addEventListener('touchmove', handleTouchMove);
+
+        return () => {
+            element.removeEventListener('wheel', handleWheel);
+            window.removeEventListener('pointerup', handlePointerUp);
+            window.removeEventListener('pointerleave', handlePointerUp);
+            element.removeEventListener('touchstart', handleTouchStart);
+            element.removeEventListener('touchmove', handleTouchMove);
+        };
+    }, [isDragging, lastPointerPosition]);
+
     if (!assetsLoaded) {
         return (
             <pixiText
@@ -302,73 +424,101 @@ export const VisualizerContainer = ({
             />
         );
     }
+
     return (
         <DragAndDropProvider>
+            {/* This background layer always captures drag events */}
+            <BackgroundLayer 
+                size={size} 
+                mapOffset={mapOffset} 
+                isDragging={isDragging}
+                onDrag={handleBackgroundDrag}
+            />
+
             <pixiTilingSprite
                 texture={Assets.get('land-0')}
                 width={size.width}
                 height={size.height}
-                tileScale={{ x: 0.25, y: 0.25 }}
+                tileScale={{ x: 0.25 * mapScale, y: 0.25 * mapScale }}  // Apply scale here
                 tilePosition={{ x: mapOffset.x * 0.5, y: mapOffset.y * 0.5 }}
                 zIndex={-100}
+                eventMode='static'
+                cursor={isDragging ? 'grabbing' : 'grab'}
+                interactive={true}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
             />
-            <MapNavigator size={size} setMapOffset={setMapOffset} setMapScale={setMapScale} />
-            <pixiContainer scale={mapScale} x={mapOffset.x} y={mapOffset.y}>
-                {categoryState && usersByCategory[categoryState] && (
-                    <pixiText
-                        text={`Users in ${categoryState}: ${usersByCategory[categoryState].length + 1}`}
-                        x={10}
-                        y={20}
-                        style={{
-                            fontSize: 14,
-                            fill: 0x000000,
-                        }}
-                    />
-                )}
 
-                {!viewWorld && categoryState && (
-                    <DepartmentVisualizer
-                        departmentUsersData={usersByCategory[categoryState]}
-                        userID={userID}
-                        setViewWorld={setViewWorld}
-                        size={size}
-                    />
-                )}
+            {/* Re-enable zoom buttons */}
+            <MapNavigator 
+                size={size} 
+                setMapOffset={setMapOffset}
+                setMapScale={setMapScale}  // Add this back
+            />
 
-                {viewWorld && categoryState && (
-                    <pixiText
-                        text="Return to Department"
-                        x={size.width / 2}
-                        y={size.height - 50}
-                        style={{
-                            fontSize: 12,
-                        }}
-                        anchor={0.5}
-                        interactive={true}
-                        cursor='pointer'
-                        eventMode='static'
-                        onPointerTap={() => setViewWorld(false)}
-                    />
-                )}
+            <pixiContainer 
+                ref={worldContainerRef}
+                scale={mapScale}  // Apply scale here
+                x={mapOffset.x} 
+                y={mapOffset.y}
+            >
+                <pixiContainer ref={contentRef}>
+                    {categoryState && usersByCategory[categoryState] && (
+                        <pixiText
+                            text={`Users in ${categoryState}: ${usersByCategory[categoryState].length + 1}`}
+                            x={10}
+                            y={20}
+                            style={{
+                                fontSize: 14,
+                                fill: 0x000000,
+                            }}
+                        />
+                    )}
 
-                {currentUser && (
-                    <CurrentUserAvatar
-                        key="self"
-                        x={size.width / 2}
-                        y={size.height / 2}
-                        hoverText={currentUser.location}
-                        userID={userID}
-                    />
-                )}
+                    {!viewWorld && categoryState && (
+                        <DepartmentVisualizer
+                            departmentUsersData={usersByCategory[categoryState]}
+                            userID={userID}
+                            setViewWorld={setViewWorld}
+                            size={size}
+                        />
+                    )}
 
-                {viewWorld && (
-                    <WorldVisualizer
-                        remoteUsersData={remoteUsersData}
-                        userID={userID}
-                        categories={allCategories}
-                        size={size}
-                    />
-                )}
+                    {viewWorld && categoryState && (
+                        <pixiText
+                            text="Return to Department"
+                            x={size.width / 2}
+                            y={size.height - 50}
+                            style={{
+                                fontSize: 12,
+                            }}
+                            anchor={0.5}
+                            interactive={true}
+                            cursor='pointer'
+                            eventMode='static'
+                            onPointerTap={() => setViewWorld(false)}
+                        />
+                    )}
+
+                    {currentUser && (
+                        <CurrentUserAvatar
+                            key="self"
+                            x={size.width / 2}
+                            y={size.height / 2}
+                            hoverText={currentUser.location}
+                            userID={userID}
+                        />
+                    )}
+
+                    {viewWorld && (
+                        <WorldVisualizer
+                            remoteUsersData={remoteUsersData}
+                            userID={userID}
+                            categories={allCategories}
+                            size={size}
+                        />
+                    )}
+                </pixiContainer>
             </pixiContainer>
         </DragAndDropProvider>
     );
