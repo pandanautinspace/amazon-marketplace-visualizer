@@ -29,7 +29,7 @@ const getColorFromCategory = (name) => {
 };
 
 
-export function CategoryBox({ x, y, url, categoryName, tilemap }) {
+export function CategoryBox({ x, y, url, categoryName, tilemap, userCount = 0 }) {
     const contRef = React.useRef(null);
     useDropTarget(categoryName, contRef, {
         onDrop: () => {
@@ -73,16 +73,18 @@ export function CategoryBox({ x, y, url, categoryName, tilemap }) {
         >
             <pixiContainer>
                 <pixiText
-                    text={categoryName}
-                    x={x + 6}
-                    y={y + 4}
+                    text={hovered ? `${userCount} user${userCount !== 1 ? 's' : ''}` : categoryName}
+                    x={x + 10}
+                    y={y + 10}
                     anchor={0}
                     zIndex={100}
                     style={{
-                        fontSize: 8,
+                        fontSize: 4,
                         fill: 0x000000,
-                        stroke: 0xFFFFFF,
-                        strokeThickness: 1,
+                        fontWeight: 'bold',
+                        wordWrap: true,
+                        wordWrapWidth: 30,
+                        align: 'center',
                     }}
                     resolution={16}
                 />

@@ -73,7 +73,8 @@ export const useMessages = () => {
     const sendMessage = async (
         userId,
         messageContent,
-        messageType = 'text'
+        messageType = 'text',
+        category = null
     ) => {
         try {
             const messageData = {
@@ -82,6 +83,11 @@ export const useMessages = () => {
                 type: messageType,
                 timestamp: serverTimestamp(),
             };
+
+            // Add category if provided (for proximity mode)
+            if (category) {
+                messageData.category = category;
+            }
 
             const docRef = await addDoc(
                 collection(db, 'messages'),
@@ -196,6 +202,7 @@ export const useContainerSize = (containerRef) => {
                 width: element.clientWidth,
                 height: element.clientHeight,
             });
+            console.log('Container size updated:', { width: element.clientWidth, height: element.clientHeight });
         };
 
         handleResize(); // Call initially
@@ -235,8 +242,8 @@ export const useResize = (
             const newHeight = startHeight + (e.clientY - startY);
 
             const updatedSize = {
-                width: Math.max(200, newWidth), // Minimum width of 100px
-                height: Math.max(200, newHeight), // Minimum height of 100px
+                width: Math.max(400, newWidth), // Minimum width of 400px
+                height: Math.max(400, newHeight), // Minimum height of 400px
             };
 
             setSize(updatedSize);

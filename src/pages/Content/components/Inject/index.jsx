@@ -8,13 +8,14 @@ import { Container, Graphics, Sprite, Text } from 'pixi.js';
 // Local components and hooks
 import '../../modules/firebase'; // Initialize Firebase
 import { VisualizerContainer } from '../VisualizerContainer';
-import { useUserID, useRemoteUsers, useLocationUpdater, useContainerSize } from './hooks';
+import { useUserID, useRemoteUsers, useLocationUpdater, useContainerSize, useMessages } from './hooks';
 import { useResize, useMarketplaceLocation } from './hooks';
 import {
     CONTAINER_STYLES,
     BACKGROUND_STYLES,
     RESIZE_HANDLE_STYLES,
-    DEFAULT_SIZE
+    DEFAULT_SIZE,
+    COLORS
 } from './constants';
 import VerticalSlider from '../../components/VerticalSlider/index.jsx';
 import ChatComponent from './ChatComponent';
@@ -42,6 +43,7 @@ const Inject = () => {
     const location = useMarketplaceLocation();
     const userID = useUserID();
     const remoteUsersData = useRemoteUsers();
+    const { messagesArray } = useMessages();
     const containerSize = useContainerSize(divRef);
     const { size, startResizing, setSize } = useResize(containerRef, appRef, DEFAULT_SIZE);
 
@@ -98,69 +100,95 @@ const Inject = () => {
         <div
             style={{
                 ...CONTAINER_STYLES,
-                width: size.width + 'px',
+                width: (size.width + 50) + 'px',
                 height: size.height + 'px',
             }}
             ref={containerRef}
         >
-            <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    padding: '5px',
-                    backgroundColor: '#f0f0f0',
-                    borderBottom: '1px solid #ddd'
-                }}>
-                    <div>{location.displayData.title}</div>
-                    <button onClick={handleChatToggle} style={{display: 'flex',justifyContent: 'flex-end', backgroundColor: 'lightblue'}} >
-                        {showChat ? 'Hide Chat' : 'Show Chat'}
-                    </button>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 12px',
+                backgroundColor: COLORS.lightBrown,
+                borderBottom: `2px solid ${COLORS.darkBrown}`,
+                borderRadius: '5px 5px 0 0'
+            }}>
+                <div style={{
+                    color: COLORS.darkBrown,
+                    fontWeight: 'bold',
+                    fontSize: '14px'
+                }}>{location.displayData.title}</div>
+                <button
+                    onClick={handleChatToggle}
+                    style={{
+                        padding: '6px 12px',
+                        backgroundColor: COLORS.green,
+                        color: COLORS.white,
+                        border: `1px solid ${COLORS.darkBrown}`,
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '12px'
+                    }}
+                >
+                    {showChat ? 'Hide Chat' : 'Show Chat'}
+                </button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'row', height: 'calc(100% - 37px)' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', height: 'calc(100% - 45px)' }}>
                 {/* Slider Panel */}
                 <div style={{
                     width: '50px',
-                    borderRight: '1px solid #ddd',
-                    backgroundColor: '#ffffff',
+                    flexShrink: 0,
+                    borderRight: `2px solid ${COLORS.darkBrown}`,
+                    backgroundColor: COLORS.offWhite,
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center'
                 }}>
-                    <VerticalSlider 
+                    <VerticalSlider
                         value={mapScale}
                         onChange={setMapScale}
                         min={0.5}
-                        max={2}
+                        max={3}
                     />
                 </div>
 
                 {/* Main Canvas */}
-                <div style={{ ...BACKGROUND_STYLES, flex: 1 }} ref={divRef}>
+                <div style={{ ...BACKGROUND_STYLES, flex: 1, minWidth: 0 }} ref={divRef}>
                     <Application
                         autoStart
                         sharedTicker
                         backgroundAlpha={0}
                         resizeTo={divRef}
                         ref={appRef}
+                        antialias={true}
+                        resolution={window.devicePixelRatio || 2}
+                        autoDensity={true}
                     >
                         <VisualizerContainer
                             containerRef={containerRef}
+                            canvasRef={divRef}
                             remoteUsersData={remoteUsersData}
                             userID={userID}
                             size={containerSize}
                             categories={categories}
                             mapScale={mapScale}
                             setMapScale={setMapScale}
+                            messagesArray={messagesArray}
                         />
                     </Application>
                 </div>
 
                 {/* Chat Panel */}
                 {showChat && (
-                    <div style={{
-                        width: '300px',
-                        borderLeft: '1px solid #ddd',
-                        backgroundColor: '#ffffff'
-                    }}>
+                    <div
+                        data-chat-container
+                        style={{
+                            width: '300px',
+                            borderLeft: `2px solid ${COLORS.darkBrown}`,
+                            backgroundColor: COLORS.offWhite
+                        }}>
                         <ChatComponent />
                     </div>
                 )}

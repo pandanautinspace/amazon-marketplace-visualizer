@@ -1,95 +1,163 @@
 // ChatComponent.jsx
-import React, { useState, useRef, useEffect} from 'react';
-import { useMessages, useUserID } from './hooks';
+import React, { useState, useRef, useEffect } from 'react';
+import { useMessages, useUserID, useMarketplaceLocation } from './hooks';
+import { getCurrentCategory } from '../../modules/breadcrumbs';
+import { COLORS } from './constants';
+
+// Predefined emoji messages
+export const EMOJI_MESSAGES = [
+  { emoji: '💰', message: 'Great deal!', label: 'Deal' },
+  { emoji: '👍', message: 'Recommend this', label: 'Recommend' },
+  { emoji: '❓', message: 'Need help', label: 'Help' },
+  { emoji: '🔥', message: 'This is hot!', label: 'Hot' },
+  { emoji: '⭐', message: 'Favorite!', label: 'Favorite' },
+  { emoji: '👀', message: 'Check this out', label: 'Look' }
+];
 
 function ChatComponent() {
-  const [newMessage, setNewMessage] = useState('');
+  const [isProximityMode, setIsProximityMode] = useState(true);
   const userID = useUserID();
+  const location = useMarketplaceLocation();
   const { messagesArray, loading, error, sendMessage } = useMessages();
 
-
   const messagesEndRef = useRef(null);
+
+  // Get current category for proximity mode
+  const currentCategory = getCurrentCategory(location);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messagesArray]);
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !userID) return;
-    
+
+  const handleSendEmoji = async (emojiData) => {
+    if (!userID) return;
+
     try {
-      await sendMessage(userID, newMessage, 'text');
-      setNewMessage('');
+      const messageData = {
+        message: emojiData.message,
+        emoji: emojiData.emoji
+      };
+
+      // Add category if in proximity mode
+      if (isProximityMode && currentCategory) {
+        messageData.category = currentCategory;
+      }
+
+      await sendMessage(userID, messageData.message, 'emoji', messageData.category);
     } catch (error) {
       console.error('Failed to send message:', error);
     }
   };
-  const handleSendDeal = async (e) => {
-    let newMess = "I found a DEAL!";
-    e.preventDefault();
-    try {
-      await sendMessage(userID, newMess, 'notif');
-      setNewMessage('');
-    } catch (error) {
-      console.error('Failed to send message:', error);
-    }
-  };
+
+  // Filter messages based on mode
+  const filteredMessages = messagesArray.filter(message => {
+    if (!isProximityMode) return true; // Global mode shows all
+    if (!currentCategory) return true; // If no category, show all
+    return !message.category || message.category === currentCategory;
+  });
 
   if (loading) return <div className="text-center p-5">Loading messages...</div>;
   if (error) return <div className="text-center p-5">Error: {error.message}</div>;
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col" style={{ backgroundColor: COLORS.offWhite }}>
+      {/* Header with mode toggle */}
+      <div className="p-3" style={{
+        backgroundColor: COLORS.lightBrown,
+        borderBottom: `2px solid ${COLORS.darkBrown}`
+      }}>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold" style={{ color: COLORS.darkBrown }}>
+            {isProximityMode ? '📍 Proximity' : '🌍 Global'}
+          </span>
+          <button
+            onClick={() => setIsProximityMode(!isProximityMode)}
+            className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+            style={{ backgroundColor: isProximityMode ? COLORS.green : COLORS.darkBrown }}
+          >
+            <span
+              className="inline-block h-4 w-4 transform rounded-full transition-transform"
+              style={{
+                backgroundColor: COLORS.white,
+                transform: isProximityMode ? 'translateX(1.5rem)' : 'translateX(0.25rem)'
+              }}
+            />
+          </button>
+        </div>
+        {isProximityMode && currentCategory && (
+          <div className="text-xs mt-1" style={{ color: COLORS.darkBrown }}>
+            In: {currentCategory}
+          </div>
+        )}
+      </div>
+
       {/* Messages container */}
       <div className="flex-1 overflow-y-auto p-4">
-        {[...messagesArray].reverse().map(message => (
-          <div 
-            key={message.id} 
-            className={`mb-2 p-2 rounded ${
-              message.userId === userID 
-                ? 'ml-auto bg-blue-100' 
-                : 'bg-white border'
-            }`}
-            style={{ maxWidth: '80%' }}
+        {filteredMessages.map(message => (
+          <div
+            key={message.id}
+            className="mb-2 p-2 rounded"
+            style={{
+              maxWidth: '80%',
+              marginLeft: message.userId === userID ? 'auto' : '0',
+              backgroundColor: message.userId === userID ? COLORS.lightBrown : COLORS.green,
+              border: `1px solid ${COLORS.darkBrown}`,
+              color: COLORS.white
+            }}
           >
-            <div>{message.message}</div>
-            <div className="text-xs text-gray-500">
-              {message.timestamp 
-                ? new Date(message.timestamp.toDate()).toLocaleTimeString() 
+            <div className="flex items-center gap-2">
+              {message.type === 'emoji' && <span className="text-2xl">{getEmojiFromMessage(message.message)}</span>}
+              <span style={{ color: COLORS.white }}>{message.message}</span>
+            </div>
+            {message.category && (
+              <div className="text-xs mt-1" style={{ color: COLORS.white, opacity: 0.8 }}>
+                📍 {message.category}
+              </div>
+            )}
+            <div className="text-xs" style={{ color: COLORS.white, opacity: 0.7 }}>
+              {message.timestamp
+                ? new Date(message.timestamp.toDate()).toLocaleTimeString()
                 : 'Sending...'}
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Input container */}
-      <div className="p-4 bg-white border-t">
-        <form onSubmit={handleSendMessage} className="mb-2">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 p-2 border rounded"
-            />
-            <button 
-              type="submit" 
-              className="px-4 bg-blue-500 text-white rounded"
+      {/* Emoji buttons */}
+      <div className="p-3" style={{
+        backgroundColor: COLORS.green,
+        borderTop: `2px solid ${COLORS.darkBrown}`
+      }}>
+        <div className="grid grid-cols-3 gap-2">
+          {EMOJI_MESSAGES.map((emojiData, index) => (
+            <button
+              key={index}
+              onClick={() => handleSendEmoji(emojiData)}
+              className="flex flex-col items-center justify-center p-3 rounded-lg transition-colors"
+              style={{
+                backgroundColor: COLORS.offWhite,
+                border: `2px solid ${COLORS.darkBrown}`,
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightBrown}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.offWhite}
+              title={emojiData.message}
             >
-              Send
+              <span className="text-2xl mb-1">{emojiData.emoji}</span>
+              <span className="text-xs" style={{ color: COLORS.darkBrown }}>{emojiData.label}</span>
             </button>
-          </div>
-        </form>
-        <button 
-          onClick={handleSendDeal}
-          className="w-full p-2 bg-green-500 text-white rounded"
-        >
-          I found a DEAL!
-        </button>
+          ))}
+        </div>
       </div>
     </div>
   );
+}
+
+// Helper function to get emoji from message
+function getEmojiFromMessage(message) {
+  const emojiData = EMOJI_MESSAGES.find(e => e.message === message);
+  return emojiData ? emojiData.emoji : '💬';
 }
 
 export default ChatComponent;
