@@ -18,7 +18,7 @@ import {
     COLORS
 } from './constants';
 import VerticalSlider from '../../components/VerticalSlider/index.jsx';
-import ChatComponent from './ChatComponent';
+import ChatComponent from '../ChatComponent/index.jsx';
 // Extend PIXI components for use with @pixi/react
 extend({
     Container,

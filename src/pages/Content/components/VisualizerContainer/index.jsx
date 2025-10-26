@@ -7,7 +7,7 @@ import { useApplication, extend, useTick } from '@pixi/react';
 import { chromeSpriteSheetLocs as sprite } from '../../modules/spritesheet_locs';
 import { Texture, Assets, TilingSprite, Rectangle, Container } from 'pixi.js';
 import { CompositeTilemap } from '@pixi/tilemap';
-import { EMOJI_MESSAGES } from '../Inject/ChatComponent';
+import { EMOJI_MESSAGES } from '../ChatComponent/index.jsx';
 
 extend({ TilingSprite, CompositeTilemap });
 

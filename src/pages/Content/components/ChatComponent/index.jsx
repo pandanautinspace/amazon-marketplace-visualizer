@@ -1,8 +1,8 @@
 // ChatComponent.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { useMessages, useUserID, useMarketplaceLocation } from './hooks';
+import { useMessages, useUserID, useMarketplaceLocation } from '../Inject/hooks';
 import { getCurrentCategory } from '../../modules/breadcrumbs';
-import { COLORS } from './constants';
+import { COLORS } from '../Inject/constants';
 
 // Predefined emoji messages
 export const EMOJI_MESSAGES = [
