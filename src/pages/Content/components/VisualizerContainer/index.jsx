@@ -426,6 +426,7 @@ export const VisualizerContainer = ({
         y: size.height / 2 - (size.height / 2) * mapScale
     };
 
+    
     const [mapOffset, setMapOffset] = useState(initialOffset);
     // const [mapScale, setMapScale] = useState(2);
     const [assetsLoaded, setAssetsLoaded] = useState(false);
@@ -434,6 +435,19 @@ export const VisualizerContainer = ({
     const [pointerTarget, setPointerTarget] = useState(null);
     const worldContainerRef = useRef(null);
     const contentRef = useRef(null);
+    const hasInitialized = useRef(false);
+
+    // when size is available on the second render
+    useEffect(() => {
+        if (!hasInitialized.current && size.width > 0 && size.height > 0) {
+            const centerOffset = {
+                x: size.width / 2 - (size.width / 2) * mapScale,
+                y: size.height / 2 - (size.height / 2) * mapScale
+            };
+            setMapOffset(centerOffset);
+            hasInitialized.current = true;
+        }
+    }, [size.width, size.height, mapScale]);
     const prevMapScaleRef = useRef(mapScale);
 
     // Adjust offset when scale changes to zoom from center
