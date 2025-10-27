@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
-import { useDragAndDrop } from "./DnDContext";
-import { useApplication } from "@pixi/react";
+import { useState, useRef } from 'react';
+import { useDragAndDrop } from './DnDContext';
+import { useApplication } from '@pixi/react';
 
 export const useDraggable = (ref, initialPos = { x: 0, y: 0 }) => {
     const { handleDrop, findTarget } = useDragAndDrop();
@@ -59,6 +59,6 @@ export const useDraggable = (ref, initialPos = { x: 0, y: 0 }) => {
             pointermove: onDragMove,
             pointerup: onDragEnd,
             pointerupoutside: onDragEnd,
-        }
+        },
     };
 };
