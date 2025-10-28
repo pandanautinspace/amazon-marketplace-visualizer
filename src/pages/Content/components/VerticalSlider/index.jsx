@@ -7,17 +7,30 @@ const VerticalSlider = ({ value, onChange, min = 0.5, max = 2 }) => {
   const white = '#FFFFFF';
 
   return (
-    <div className="h-1/2 flex items-center mx-4">
-      <div className="relative h-full flex items-center">
-        <div
-          className="absolute -top-6 left-1/2 -translate-x-1/2 text-lg font-bold"
-          style={{ color: darkBrown }}
+      <div style={{ 
+        color: darkBrown,       
+        display: 'flex', 
+        flexDirection: 'column',   
+        alignItems: 'center',
+        pointerEvents: 'auto',
+        height: '250px',             
+        justifyContent: 'space-between'  
+      }}
+      >
+        <div style={{ 
+        color: darkBrown, 
+        fontSize: '24px',
+        fontWeight: 'bold',
+        marginBottom: '8px', 
+        pointerEvents: 'none'
+      }}
         >
           +
         </div>
 
         <input
           type="range"
+          orient="vertical"
           min={min}
           max={max}
           step="0.1"
@@ -35,8 +48,11 @@ const VerticalSlider = ({ value, onChange, min = 0.5, max = 2 }) => {
         />
 
         <div
-          className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-lg font-bold"
-          style={{ color: darkBrown }}
+          style={{ color: darkBrown,
+        fontSize: '24px',
+        fontWeight: 'bold',
+        marginTop: '8px',         // ← Space above
+        pointerEvents: 'none'}}
         >
           -
         </div>
@@ -64,7 +80,6 @@ const VerticalSlider = ({ value, onChange, min = 0.5, max = 2 }) => {
           }
         `}</style>
       </div>
-    </div>
   );
 };
 

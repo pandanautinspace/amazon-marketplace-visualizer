@@ -615,7 +615,7 @@ export const VisualizerContainer = ({
     // Handle wheel zoom
     const handleWheel = (e) => {
         e.preventDefault();
-        const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
         setMapScale(prev => Math.min(Math.max(prev * zoomFactor, 0.5), 3));
     };
 

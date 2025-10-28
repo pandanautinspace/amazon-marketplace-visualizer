@@ -202,7 +202,10 @@ export const useContainerSize = (containerRef) => {
                 width: element.clientWidth,
                 height: element.clientHeight,
             });
-            console.log('Container size updated:', { width: element.clientWidth, height: element.clientHeight });
+            console.log('Container size updated:', {
+                width: element.clientWidth,
+                height: element.clientHeight,
+            });
         };
 
         handleResize(); // Call initially
