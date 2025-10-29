@@ -1,6 +1,6 @@
 import { printLine } from './modules/print';
 import injectComponent from './modules/injector';
-import { startNPCUpdates } from './modules/firebase';
+import { startNPCUpdates } from './components/NPC/index.jsx';
 import '../../styles/tailwind.css';
 
 
