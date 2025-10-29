@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useDragAndDrop } from "./DnDContext";
+import { useEffect } from 'react';
+import { useDragAndDrop } from './DnDContext';
 
 export const useDropTarget = (id, ref, { onDrop }) => {
     const { registerDropTarget, unregisterDropTarget } = useDragAndDrop();
@@ -12,7 +12,7 @@ export const useDropTarget = (id, ref, { onDrop }) => {
             });
             return () => {
                 unregisterDropTarget(id);
-            }
+            };
         }
     }, [id, ref, onDrop]);
 };

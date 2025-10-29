@@ -38,14 +38,14 @@ export const BACKGROUND_STYLES = {
 
 // Resize handle styling
 export const RESIZE_HANDLE_STYLES = {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     left: 0,
-    width: "20px",
-    height: "20px",
+    width: '20px',
+    height: '20px',
     background: `linear-gradient(135deg, ${COLORS.darkBrown} 0%, ${COLORS.lightBrown} 100%)`,
-    cursor: "nesw-resize",
-    borderRadius: "0 4px 0 0",
+    cursor: 'nesw-resize',
+    borderRadius: '0 4px 0 0',
     border: `1px solid ${COLORS.darkBrown}`,
     borderLeft: 'none',
     borderBottom: 'none',

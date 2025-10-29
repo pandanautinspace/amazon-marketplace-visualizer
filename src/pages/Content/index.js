@@ -3,7 +3,6 @@ import injectComponent from './modules/injector';
 import { startNPCUpdates } from './components/NPC/index.jsx';
 import '../../styles/tailwind.css';
 
-
 // console.log('Must reload extension for modifications to take effect.');
 
 printLine('Amazon Market Visualizer is running...');

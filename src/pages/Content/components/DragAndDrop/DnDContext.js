@@ -1,6 +1,6 @@
 import React from 'react';
-import { useApplication } from "@pixi/react";
-import { createContext, useContext, useRef, useEffect } from "react";
+import { useApplication } from '@pixi/react';
+import { createContext, useContext, useRef, useEffect } from 'react';
 
 export const DragAndDropContext = createContext(null);
 
@@ -19,11 +19,11 @@ export const DragAndDropProvider = ({ children }) => {
 
     const registerDropTarget = (id, data) => {
         dropTargets.current.set(id, data);
-    }
+    };
 
     const unregisterDropTarget = (id) => {
         dropTargets.current.delete(id);
-    }
+    };
 
     const findTarget = (draggableBounds) => {
         for (let [id, target] of dropTargets.current) {
@@ -33,7 +33,7 @@ export const DragAndDropProvider = ({ children }) => {
             }
         }
         return null;
-    }
+    };
 
     const handleDrop = (draggableBounds) => {
         const targetId = findTarget(draggableBounds);
@@ -42,10 +42,17 @@ export const DragAndDropProvider = ({ children }) => {
             target?.onDrop();
         }
         return targetId;
-    }
+    };
 
     return (
-        <DragAndDropContext.Provider value={{ registerDropTarget, unregisterDropTarget, findTarget, handleDrop }}>
+        <DragAndDropContext.Provider
+            value={{
+                registerDropTarget,
+                unregisterDropTarget,
+                findTarget,
+                handleDrop,
+            }}
+        >
             {children}
         </DragAndDropContext.Provider>
     );
@@ -54,7 +61,9 @@ export const DragAndDropProvider = ({ children }) => {
 export const useDragAndDrop = () => {
     const context = useContext(DragAndDropContext);
     if (!context) {
-        throw new Error('useDragAndDrop must be used within a DragAndDropProvider');
+        throw new Error(
+            'useDragAndDrop must be used within a DragAndDropProvider'
+        );
     }
     return context;
 };
