@@ -2,7 +2,7 @@
 
 A Chrome extension that transforms Amazon.fr into a social shopping experience, allowing you to browse and shop alongside your friends in real-time.
 
-[Our presentation slides](https://docs.google.com/presentation/d/1DUt4Tv4iVS7Xjk5UND307TIl9-mh5bG03Uv2dws9xWc/edit?usp=sharing)
+[Our presentation slides](https://docs.google.com/presentation/d/1DUt4Tv4iVS7Xjk5UND307TIl9-mh5bG03Uv2dws9xWc/edit?usp=sharing)\
 [Our Report](https://docs.google.com/document/d/1LBssJNEav7f4nCLgg_qLQacSnYyv8-5mmo4unnjftGA/edit?usp=sharing)
 
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue.svg) ![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg) ![Manifest V3](https://img.shields.io/badge/Manifest-V3-brightgreen.svg)
