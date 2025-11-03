@@ -15,6 +15,7 @@ Shopping online requires hours of comparison and research for a simple purchase,
 Jungle Mall addresses this by transforming Amazon.fr into a virtual shopping mall where users can see each other in real-time, interact, and make the shopping experience genuinely social rather than solitary. The system scrapes information from the web page to intelligently place users in different "departments" based on what they're viewing, creating a spatial representation of the shopping experience.
 
 ![Jungle Mall Interface](readme-assets/jungle-mall-concept.png)
+
 _The virtual mall shows users as avatars in different departments based on their browsing activity_
 
 ## Features
@@ -86,6 +87,7 @@ The extension consists of:
 -   **Chat Component**: Handles real-time messaging via Firebase
 
 ![Architecture Diagram](readme-assets/architecture.png)
+
 _System architecture showing extension components and data flow_
 
 ## Next Steps
@@ -100,7 +102,8 @@ _System architecture showing extension components and data flow_
 -   Kenneth Browder
 -   Keryan Cossard
 -   Soheil Lotfi
-    <i>Developed as a part of "Advanced Programming of User Interfaces" Course at Institut Polytechnique de Paris</i>
+
+<i>Developed as a part of "Advanced Programming of User Interfaces" Course at Institut Polytechnique de Paris</i>
 
 ## License
 
